@@ -1,15 +1,32 @@
-var uuid = require('node-uuid');
+'use strict';
+
+var  AWS     = require('aws-sdk'),
+     uuid    = require('node-uuid');
+
+var dynamoConfig = {
+    sessionToken:    process.env.AWS_SESSION_TOKEN,
+    region:          process.env.AWS_REGION
+};
+var dynamodbDocClient = new AWS.DynamoDB.DocumentClient(dynamoConfig);
+var tableName = 'slant-slantusers-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
+
 
 module.exports.create = function(event, cb) {
 
-    var response = {
+    var newUser = {
         "id": uuid.v4(),
         "tokens": 10,
         "reputation": 11,
         "createdAt": Date.now()
     };
-
-    return cb(null, response);
+    var params = {
+        TableName : tableName,
+        Item: newUser
+    };
+    function response() {
+        return cb(null, newUser);
+    }
+    dynamodbDocClient.put(params, response);
 };
 
 module.exports.getUser = function(event, cb) {
