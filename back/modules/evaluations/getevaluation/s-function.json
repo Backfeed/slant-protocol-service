@@ -1,0 +1,41 @@
+{
+  "functions": {
+    "getevaluation": {
+      "custom": {
+        "excludePatterns": [],
+        "envVars": []
+      },
+      "handler": "modules/evaluations/getevaluation/handler.handler",
+      "timeout": 6,
+      "memorySize": 1024,
+      "eventSourceArn": "",
+      "endpoints": [
+        {
+          "path": "evaluations/{id}",
+          "method": "GET",
+          "authorizationType": "none",
+          "apiKeyRequired": true,
+          "requestParameters": {
+            "integration.request.querystring.id": "method.request.querystring.id"
+          },
+          "requestTemplates": {
+            "application/json": "{\"id\":\"$input.params('id')\"}"
+          },
+          "responses": {
+            "400": {
+              "statusCode": "400"
+            },
+            "default": {
+              "statusCode": "200",
+              "responseParameters": {},
+              "responseModels": {},
+              "responseTemplates": {
+                "application/json": ""
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

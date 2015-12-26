@@ -1,0 +1,39 @@
+{
+  "functions": {
+    "createcontribution": {
+      "custom": {
+        "excludePatterns": [],
+        "envVars": []
+      },
+      "handler": "modules/contributions/createcontribution/handler.handler",
+      "timeout": 6,
+      "memorySize": 1024,
+      "eventSourceArn": "",
+      "endpoints": [
+        {
+          "path": "contributions",
+          "method": "POST",
+          "authorizationType": "none",
+          "apiKeyRequired": true,
+          "requestParameters": {},
+          "requestTemplates": {
+            "application/json": "{\"userId\":\"$input.params('userId')\",\"biddingId\":\"$input.params('biddingId')\"}"
+          },
+          "responses": {
+            "400": {
+              "statusCode": "400"
+            },
+            "default": {
+              "statusCode": "201",
+              "responseParameters": {},
+              "responseModels": {},
+              "responseTemplates": {
+                "application/json": ""
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "slant",
+  "version": "0.0.1",
+  "profile": "serverless-0",
+  "location": "https://github.com/...",
+  "author": "",
+  "description": "",
+  "domain": "backfeed.cc",
+  "stages": {
+    "development": [
+      {
+        "region": "us-east-1",
+        "iamRoleArnLambda": "arn:aws:iam::051563103010:role/slant-development-r-IamRoleLambda-1TV87M2A7RQAU",
+        "regionBucket": "serverless.useast1.backfeed.cc",
+        "restApiId": "czbcd3bnlj"
+      }
+    ]
+  },
+  "custom": {},
+  "plugins": [
+    {
+      "path": "serverless-serve"
+    }
+  ]
+}

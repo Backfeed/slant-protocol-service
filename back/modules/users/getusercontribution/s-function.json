@@ -1,0 +1,42 @@
+{
+  "functions": {
+    "getusercontribution": {
+      "custom": {
+        "excludePatterns": [],
+        "envVars": []
+      },
+      "handler": "modules/users/getusercontribution/handler.handler",
+      "timeout": 6,
+      "memorySize": 1024,
+      "eventSourceArn": "",
+      "endpoints": [
+        {
+          "path": "users/{id}/contributions",
+          "method": "GET",
+          "authorizationType": "none",
+          "apiKeyRequired": true,
+          "requestParameters": {
+            "integration.request.querystring.id": "method.request.querystring.id",
+            "integration.request.querystring.active": "method.request.querystring.active"
+          },
+          "requestTemplates": {
+            "application/json": "{\"id\":\"$input.params('id')\",\"active\":\"$input.params('active')\"}"
+          },
+          "responses": {
+            "400": {
+              "statusCode": "400"
+            },
+            "default": {
+              "statusCode": "200",
+              "responseParameters": {},
+              "responseModels": {},
+              "responseTemplates": {
+                "application/json": ""
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
