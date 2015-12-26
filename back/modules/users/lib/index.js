@@ -8,7 +8,7 @@ var dynamoConfig = {
     region:          process.env.AWS_REGION
 };
 var dynamodbDocClient = new AWS.DynamoDB.DocumentClient(dynamoConfig);
-var tableName = 'slant-slantusers-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
+var tableName = 'slant-users-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 
 
 module.exports.create = function(event, cb) {

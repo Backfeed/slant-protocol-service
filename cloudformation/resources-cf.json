@@ -167,7 +167,7 @@
                           {
                             "Ref": "ProjectName"
                           },
-                          "-slantusers-",
+                          "-users-",
                           {
                             "Ref": "DataModelStage"
                           }
@@ -223,7 +223,7 @@
               {
                 "Ref": "ProjectName"
               },
-              "-slantusers-",
+              "-users-",
               {
                 "Ref": "DataModelStage"
               }
