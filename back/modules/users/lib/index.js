@@ -31,16 +31,14 @@ module.exports.create = function(event, cb) {
 
 module.exports.getUser = function(event, cb) {
 
-    console.log("event", event);
-    var response = {
-        "id": event.id,
-        "tokens": 10,
-        "reputation": 11,
-        "createdAt": Date.now(),
-        "event": event
+    var params = {
+        TableName : tableName,
+        Key: {
+            id: event.id
+        }
     };
 
-    return cb(null, response);
+    return dynamodbDocClient.get(params, cb);
 };
 
 
