@@ -177,6 +177,37 @@
                   ]
                 ]
               }
+            },
+            {
+              "Effect": "Allow",
+              "Action": [ "*" ],
+              "Resource": {
+                "Fn::Join": [
+                  ":",
+                  [
+                    "arn:aws:dynamodb",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    "*",
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "table/",
+                          {
+                            "Ref": "ProjectName"
+                          },
+                          "-biddings-",
+                          {
+                            "Ref": "DataModelStage"
+                          }
+                        ]
+                      ]
+                    }
+                  ]
+                ]
+              }
             }
           ]
         },
@@ -192,7 +223,7 @@
         ]
       }
     },
-    "DynamoDB": {
+    "UsersDynamoDB": {
       "Type": "AWS::DynamoDB::Table",
       "DeletionPolicy" : "Retain",
       "Properties": {
@@ -224,6 +255,46 @@
                 "Ref": "ProjectName"
               },
               "-users-",
+              {
+                "Ref": "DataModelStage"
+              }
+            ]
+          ]
+        }
+      }
+    },
+    "BiddingsDynamoDB": {
+      "Type": "AWS::DynamoDB::Table",
+      "DeletionPolicy" : "Retain",
+      "Properties": {
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "id",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "id",
+            "KeyType": "HASH"
+          }
+        ],
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": {
+            "Ref": "DynamoRWThroughput"
+          },
+          "WriteCapacityUnits": {
+            "Ref": "DynamoRWThroughput"
+          }
+        },
+        "TableName": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "ProjectName"
+              },
+              "-biddings-",
               {
                 "Ref": "DataModelStage"
               }
