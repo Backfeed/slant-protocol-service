@@ -19,7 +19,7 @@
             "integration.request.querystring.id": "method.request.querystring.id"
           },
           "requestTemplates": {
-            "application/json": "{\"id\":\"$input.params('id')\"}"
+            "application/json": "{\"id\":\"$input.params('id')\", \"body\" : \"$input.json('$')\"}"
           },
           "responses": {
             "400": {

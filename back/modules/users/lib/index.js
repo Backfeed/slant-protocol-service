@@ -70,18 +70,34 @@ module.exports.getUserContributions = function(event, cb) {
 };
 module.exports.deleteUser = function(event, cb) {
 
-    var response = {
-        "id": event.id
+    var params = {
+        TableName : tableName,
+        Key: {
+            id: event.id
+        }
     };
-
-    return cb(null, response);
+    function response() {
+        return cb(null, params.Key);
+    }
+    return dynamodbDocClient.delete(params, response);
 };
 
 module.exports.updateUser = function(event, cb) {
 
-    var response = {
-        "event": event
+    var params = {
+        TableName: tableName,
+        Key: {
+            id: event.id
+        },
+        UpdateExpression: 'set #tok = :t, #rep = :r',
+        ExpressionAttributeNames: {'#tok' : 'tokens', '#rep' : 'reputation'},
+        ExpressionAttributeValues: {
+            ':t' : event.tokens,
+            ':r' : event.reputation
+        },
+        ReturnValues: 'ALL_OLD'
     };
 
-    return cb(null, response);
+    //ConditionExpression: 'attribute_exists',
+    return dynamodbDocClient.update(params, cb);
 };
