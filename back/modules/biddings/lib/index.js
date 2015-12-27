@@ -55,23 +55,33 @@ module.exports.getBiddingUsers = function(event, cb) {
 
 module.exports.endBidding = function(event, cb) {
 
-  var response = {
-    "id": event.id,
-    "contributionId": event.id,
-    "active": true,
-    "createdAt": Date.now(),
-    "endedAt": Date.now(),
-    "event": event
+  var params = {
+    TableName: tableName,
+    Key: {
+      id: event.id
+    },
+    UpdateExpression: 'set #act = :a, #end = :e',
+    ExpressionAttributeNames: {'#act' : 'active', '#end' : 'endedAt'},
+    ExpressionAttributeValues: {
+      ':a' : false,
+      ':e' : Date.now()
+    },
+    ReturnValues: 'ALL_OLD'
   };
 
-  return cb(null, response);
+  return dynamodbDocClient.update(params, cb);
 };
 
 module.exports.deleteBidding = function(event, cb) {
 
-  var response = {
-    "id": event.id
+  var params = {
+    TableName : tableName,
+    Key: {
+      id: event.id
+    }
   };
-
-  return cb(null, response);
+  function response() {
+    return cb(null, params.Key);
+  }
+  return dynamodbDocClient.delete(params, response);
 };
