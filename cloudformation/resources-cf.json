@@ -167,6 +167,68 @@
                           {
                             "Ref": "ProjectName"
                           },
+                          "-evaluations-",
+                          {
+                            "Ref": "DataModelStage"
+                          }
+                        ]
+                      ]
+                    }
+                  ]
+                ]
+              }
+            },
+            {
+              "Effect": "Allow",
+              "Action": [ "*" ],
+              "Resource": {
+                "Fn::Join": [
+                  ":",
+                  [
+                    "arn:aws:dynamodb",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    "*",
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "table/",
+                          {
+                            "Ref": "ProjectName"
+                          },
+                          "-contributions-",
+                          {
+                            "Ref": "DataModelStage"
+                          }
+                        ]
+                      ]
+                    }
+                  ]
+                ]
+              }
+            },
+            {
+              "Effect": "Allow",
+              "Action": [ "*" ],
+              "Resource": {
+                "Fn::Join": [
+                  ":",
+                  [
+                    "arn:aws:dynamodb",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    "*",
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "table/",
+                          {
+                            "Ref": "ProjectName"
+                          },
                           "-users-",
                           {
                             "Ref": "DataModelStage"
@@ -255,6 +317,86 @@
                 "Ref": "ProjectName"
               },
               "-users-",
+              {
+                "Ref": "DataModelStage"
+              }
+            ]
+          ]
+        }
+      }
+    },
+    "EvaluationsDynamoDB": {
+      "Type": "AWS::DynamoDB::Table",
+      "DeletionPolicy" : "Retain",
+      "Properties": {
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "id",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "contributionId",
+            "KeyType": "HASH"
+          }
+        ],
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": {
+            "Ref": "DynamoRWThroughput"
+          },
+          "WriteCapacityUnits": {
+            "Ref": "DynamoRWThroughput"
+          }
+        },
+        "TableName": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "ProjectName"
+              },
+              "-evaluations-",
+              {
+                "Ref": "DataModelStage"
+              }
+            ]
+          ]
+        }
+      }
+    },
+    "ContributionsDynamoDB": {
+      "Type": "AWS::DynamoDB::Table",
+      "DeletionPolicy" : "Retain",
+      "Properties": {
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "id",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "biddingId",
+            "KeyType": "HASH"
+          }
+        ],
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": {
+            "Ref": "DynamoRWThroughput"
+          },
+          "WriteCapacityUnits": {
+            "Ref": "DynamoRWThroughput"
+          }
+        },
+        "TableName": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "ProjectName"
+              },
+              "-contribution-",
               {
                 "Ref": "DataModelStage"
               }
