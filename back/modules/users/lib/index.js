@@ -17,6 +17,7 @@ module.exports.create = function(event, cb) {
         "id": uuid.v4(),
         "tokens": 10,
         "reputation": 11,
+        "biddingCount": 0,
         "createdAt": Date.now()
     };
     var params = {
@@ -45,30 +46,18 @@ module.exports.getUser = function(event, cb) {
 
 module.exports.getUserEvaluations = function(event, cb) {
 
-    console.log("event", event);
-    var response = {
-        "id": event.id,
-        "tokens": 10,
-        "reputation": 11,
-        "createdAt": Date.now(),
-        "event": event
-    };
+    var response = [];
 
     return cb(null, response);
 };
+
 module.exports.getUserContributions = function(event, cb) {
 
-    console.log("event", event);
-    var response = {
-        "id": event.id,
-        "tokens": 10,
-        "reputation": 11,
-        "createdAt": Date.now(),
-        "event": event
-    };
+    var response = [];
 
     return cb(null, response);
 };
+
 module.exports.deleteUser = function(event, cb) {
 
     var params = {
@@ -95,11 +84,26 @@ module.exports.updateUser = function(event, cb) {
             ':t' : event.tokens,
             ':r' : event.reputation
         },
-        ReturnValues: 'ALL_OLD'
+        ReturnValues: 'ALL_NEW'
     };
 
     //ConditionExpression: 'attribute_exists',
     return dynamodbDocClient.update(params, function(err, data) {
-        return cb(err, data);
+        return cb(err, data.Attributes);
     });
+
+    //var updatedUser = {};
+    //updatedUser.id = event.id;
+    //if (event.tokens) updatedUser.tokens = event.tokens;
+    //if (event.reputation) updatedUser.reputations = event.reputation;
+    //var params = {
+    //    TableName : tableName,
+    //    Key: {
+    //        id: event.id
+    //    },
+    //    Item: updatedUser
+    //};
+    //dynamodbDocClient.put(params, function(err, data) {
+    //    return cb(err, data);
+    //});
 };
