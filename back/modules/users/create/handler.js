@@ -17,6 +17,7 @@ var lib = require('../lib');
 module.exports.handler = function(event, context) {
 
   lib.create(event, function(error, response) {
-    return context.done(error, response);
+    if (error) return context.fail(error, response);
+    else return context.done(error, response);
   });
 };
