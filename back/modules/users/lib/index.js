@@ -23,10 +23,9 @@ module.exports.create = function(event, cb) {
         TableName : tableName,
         Item: newUser
     };
-    function response() {
-        return cb(null, newUser);
-    }
-    dynamodbDocClient.put(params, response);
+    dynamodbDocClient.put(params, function(err, data) {
+        return cb(err, newUser);
+    });
 };
 
 module.exports.getUser = function(event, cb) {
@@ -38,7 +37,9 @@ module.exports.getUser = function(event, cb) {
         }
     };
 
-    return dynamodbDocClient.get(params, cb);
+    return dynamodbDocClient.get(params, function(err, data) {
+        return cb(err, data.Item);
+    });
 };
 
 
@@ -76,10 +77,9 @@ module.exports.deleteUser = function(event, cb) {
             id: event.id
         }
     };
-    function response() {
-        return cb(null, params.Key);
-    }
-    return dynamodbDocClient.delete(params, response);
+    return dynamodbDocClient.delete(params, function(err, data) {
+        return cb(err, params.Key);
+    });
 };
 
 module.exports.updateUser = function(event, cb) {
@@ -99,5 +99,7 @@ module.exports.updateUser = function(event, cb) {
     };
 
     //ConditionExpression: 'attribute_exists',
-    return dynamodbDocClient.update(params, cb);
+    return dynamodbDocClient.update(params, function(err, data) {
+        return cb(err, data);
+    });
 };

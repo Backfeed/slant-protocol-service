@@ -23,10 +23,9 @@ module.exports.createEvaluation = function(event, cb) {
     TableName : tableName,
     Item: newEvaluation
   };
-  function response() {
-    return cb(null, newEvaluation);
-  }
-  dynamodbDocClient.put(params, response);
+  dynamodbDocClient.put(params, function(err, data) {
+    return cb(err, newEvaluation);
+  });
 };
 
 module.exports.getEvaluation = function(event, cb) {
@@ -38,7 +37,9 @@ module.exports.getEvaluation = function(event, cb) {
     }
   };
 
-  return dynamodbDocClient.get(params, cb);
+  return dynamodbDocClient.get(params, function(err, data) {
+    return cb(err, data.Item);
+  });
 };
 
 module.exports.deleteEvaluation = function(event, cb) {
@@ -49,8 +50,7 @@ module.exports.deleteEvaluation = function(event, cb) {
       id: event.id
     }
   };
-  function response() {
-    return cb(null, params.Key);
-  }
-  return dynamodbDocClient.delete(params, response);
+  return dynamodbDocClient.delete(params, function(err, data) {
+    return cb(err, params.Key);
+  });
 };

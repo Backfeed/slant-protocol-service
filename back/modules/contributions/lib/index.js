@@ -22,10 +22,9 @@ module.exports.createContribution = function(event, cb) {
     TableName : tableName,
     Item: newContribution
   };
-  function response() {
-    return cb(null, newContribution);
-  }
-  dynamodbDocClient.put(params, response);
+  dynamodbDocClient.put(params, function(err, data) {
+  });
+    return cb(err, newContribution);
 };
 
 module.exports.getContribution = function(event, cb) {
@@ -36,8 +35,9 @@ module.exports.getContribution = function(event, cb) {
       id: event.id
     }
   };
-
-  return dynamodbDocClient.get(params, cb);
+  return dynamodbDocClient.get(params, function(err, data) {
+    return cb(err, data.Item);
+  });
 };
 
 module.exports.getContributionEvaluations = function(event, cb) {
@@ -62,8 +62,7 @@ module.exports.deleteContribution = function(event, cb) {
       id: event.id
     }
   };
-  function response() {
-    return cb(null, params.Key);
-  }
-  return dynamodbDocClient.delete(params, response);
+  return dynamodbDocClient.delete(params, function(err, data) {
+    return cb(err, params.Key);
+  });
 };

@@ -21,10 +21,9 @@ module.exports.createBidding = function(event, cb) {
     TableName : tableName,
     Item: newBidding
   };
-  function response() {
-    return cb(null, newBidding);
-  }
-  dynamodbDocClient.put(params, response);
+  dynamodbDocClient.put(params, function(err, data) {
+    return cb(err, newBidding);
+  });
 };
 
 module.exports.getBidding = function(event, cb) {
@@ -36,7 +35,9 @@ module.exports.getBidding = function(event, cb) {
     }
   };
 
-  return dynamodbDocClient.get(params, cb);
+  return dynamodbDocClient.get(params, function(err, data) {
+    return cb(err, data.Item);
+  });
 };
 
 module.exports.getBiddingContributions = function(event, cb) {
@@ -69,7 +70,9 @@ module.exports.endBidding = function(event, cb) {
     ReturnValues: 'ALL_OLD'
   };
 
-  return dynamodbDocClient.update(params, cb);
+  return dynamodbDocClient.update(params, function(err, data) {
+    return cb(err, data);
+  });
 };
 
 module.exports.deleteBidding = function(event, cb) {
@@ -80,8 +83,7 @@ module.exports.deleteBidding = function(event, cb) {
       id: event.id
     }
   };
-  function response() {
-    return cb(null, params.Key);
-  }
-  return dynamodbDocClient.delete(params, response);
+  return dynamodbDocClient.delete(params, function(err, data) {
+    return cb(err, params.Key);
+  });
 };
