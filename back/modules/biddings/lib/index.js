@@ -1,7 +1,8 @@
 'use strict';
 
-var  AWS     = require('aws-sdk'),
-     uuid    = require('node-uuid');
+var _    = require('underscore');
+var AWS  = require('aws-sdk');
+var uuid = require('node-uuid');
 
 var dynamoConfig = {
   sessionToken:    process.env.AWS_SESSION_TOKEN,
@@ -12,7 +13,20 @@ var tableName = 'slant-biddings-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 var contributionsTableName = 'slant-contributions-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 var usersTableName = 'slant-users-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 
-module.exports.createBidding = function(event, cb) {
+var hLog = log('HELPERS');
+
+module.exports = {
+  createBidding: createBidding,
+  getBidding: getBidding,
+  getBiddingContributions: getBiddingContributions,
+  getBiddingUsers: getBiddingUsers,
+  endBidding: endBidding,
+  deleteBidding: deleteBidding,
+  getWinningContribution: getWinningContribution,
+  log: log
+}
+
+function createBidding(event, cb) {
 
   var newBidding = {
     "id": uuid.v4(),
@@ -26,9 +40,9 @@ module.exports.createBidding = function(event, cb) {
   dynamodbDocClient.put(params, function(err, data) {
     return cb(err, newBidding);
   });
-};
+}
 
-module.exports.getBidding = function(event, cb) {
+function getBidding(event, cb) {
 
   var params = {
     TableName : tableName,
@@ -40,9 +54,9 @@ module.exports.getBidding = function(event, cb) {
   return dynamodbDocClient.get(params, function(err, data) {
     return cb(err, data.Item);
   });
-};
+}
 
-module.exports.getBiddingContributions = function(event, cb) {
+function getBiddingContributions(event, cb) {
 
   var params = {
     TableName : contributionsTableName,
@@ -57,14 +71,14 @@ module.exports.getBiddingContributions = function(event, cb) {
   });
 };
 
-module.exports.getBiddingUsers = function(event, cb) {
+function getBiddingUsers(event, cb) {
 
   var response = [];
 
   return cb(null, response);
 };
 
-module.exports.endBidding = function(event, cb) {
+function endBidding(event, cb) {
 
   // Protocol calculates the winning contribution
   var winningContribution = getWinningContribution('694d7f56-12db-450c-90aa-a278e38e96f0');
@@ -94,7 +108,7 @@ module.exports.endBidding = function(event, cb) {
   });
 };
 
-module.exports.deleteBidding = function(event, cb) {
+function deleteBidding(event, cb) {
 
   var params = {
     TableName : tableName,
@@ -118,4 +132,15 @@ function getWinningContribution(contributionId) {
     if (err) return {}; //err;
     else return data.Item;
   });
+}
+
+function log(prefix) {
+
+  return function() {
+    console.log('***************** ' + 'BIDDINGS: ' + prefix + ' *******************');
+    _.each(arguments, function(msg, i) { console.log(msg); });
+    console.log('***************** /' + 'BIDDINGS: ' + prefix + ' *******************');
+    // console.log('\n');
+  };
+
 }

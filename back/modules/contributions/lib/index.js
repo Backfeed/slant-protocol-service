@@ -1,7 +1,8 @@
 'use strict';
 
-var  AWS     = require('aws-sdk'),
-     uuid    = require('node-uuid');
+var _    = require('underscore');
+var AWS  = require('aws-sdk');
+var uuid = require('node-uuid');
 
 var dynamoConfig = {
   sessionToken:    process.env.AWS_SESSION_TOKEN,
@@ -10,8 +11,18 @@ var dynamoConfig = {
 var dynamodbDocClient = new AWS.DynamoDB.DocumentClient(dynamoConfig);
 var tableName = 'slant-contributions-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 var evaluationsTableName = 'slant-evaluations-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
+var hLog = log('HELPERS');
 
-module.exports.createContribution = function(event, cb) {
+module.exports = {
+  createContribution: createContribution,
+  getContribution: getContribution,
+  getContributionEvaluations: getContributionEvaluations,
+  getContributionUsers: getContributionUsers,
+  deleteContribution: deleteContribution,
+  log: log
+}
+
+function createContribution(event, cb) {
 
   var newContribution = {
     "id": uuid.v4(),
@@ -26,9 +37,9 @@ module.exports.createContribution = function(event, cb) {
   dynamodbDocClient.put(params, function(err, data) {
     return cb(err, newContribution);
   });
-};
+}
 
-module.exports.getContribution = function(event, cb) {
+function getContribution(event, cb) {
 
   var params = {
     TableName : tableName,
@@ -39,9 +50,9 @@ module.exports.getContribution = function(event, cb) {
   return dynamodbDocClient.get(params, function(err, data) {
     return cb(err, data.Item);
   });
-};
+}
 
-module.exports.getContributionEvaluations = function(event, cb) {
+function getContributionEvaluations(event, cb) {
 
   var params = {
     TableName : evaluationsTableName,
@@ -54,16 +65,16 @@ module.exports.getContributionEvaluations = function(event, cb) {
   dynamodbDocClient.query(params, function(err, data) {
     return cb(err, data.Items);
   });
-};
+}
 
-module.exports.getContributionUsers = function(event, cb) {
+function getContributionUsers(event, cb) {
 
   var response = [];
 
   return cb(null, response);
-};
+}
 
-module.exports.deleteContribution = function(event, cb) {
+function deleteContribution(event, cb) {
 
   var params = {
     TableName : tableName,
@@ -74,4 +85,15 @@ module.exports.deleteContribution = function(event, cb) {
   return dynamodbDocClient.delete(params, function(err, data) {
     return cb(err, params.Key);
   });
-};
+}
+
+function log(prefix) {
+
+  return function() {
+    console.log('***************** ' + 'CONTRIBUTIONS: ' + prefix + ' *******************');
+    _.each(arguments, function(msg, i) { console.log(msg); });
+    console.log('***************** /' + 'CONTRIBUTIONS: ' + prefix + ' *******************');
+    // console.log('\n');
+  };
+
+}

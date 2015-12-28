@@ -1,7 +1,8 @@
 'use strict';
 
-var  AWS     = require('aws-sdk'),
-     uuid    = require('node-uuid');
+var _    = require('underscore');
+var AWS  = require('aws-sdk');
+var uuid = require('node-uuid');
 
 var dynamoConfig = {
   sessionToken:    process.env.AWS_SESSION_TOKEN,
@@ -10,7 +11,16 @@ var dynamoConfig = {
 var dynamodbDocClient = new AWS.DynamoDB.DocumentClient(dynamoConfig);
 var tableName = 'slant-evaluations-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 
-module.exports.createEvaluation = function(event, cb) {
+var hLog = log('HELPERS');
+
+module.exports = {
+  createEvaluation: createEvaluation,
+  getEvaluation: getEvaluation,
+  deleteEvaluation: deleteEvaluation,
+  log: log
+};
+
+function createEvaluation(event, cb) {
 
   var params = {
     TableName : tableName,
@@ -40,9 +50,9 @@ module.exports.createEvaluation = function(event, cb) {
   dynamodbDocClient.batchWrite(params, function(err, data) {
     return cb(err, {});
   });
-};
+}
 
-module.exports.getEvaluation = function(event, cb) {
+function getEvaluation(event, cb) {
 
   var params = {
     TableName : tableName,
@@ -54,9 +64,9 @@ module.exports.getEvaluation = function(event, cb) {
   return dynamodbDocClient.get(params, function(err, data) {
     return cb(err, data.Item);
   });
-};
+}
 
-module.exports.deleteEvaluation = function(event, cb) {
+function deleteEvaluation(event, cb) {
 
   var params = {
     TableName : tableName,
@@ -67,4 +77,15 @@ module.exports.deleteEvaluation = function(event, cb) {
   return dynamodbDocClient.delete(params, function(err, data) {
     return cb(err, params.Key);
   });
-};
+}
+
+function log(prefix) {
+
+  return function() {
+    console.log('***************** ' + 'EVALUATIONS: ' + prefix + ' *******************');
+    _.each(arguments, function(msg, i) { console.log(msg); });
+    console.log('***************** /' + 'EVALUATIONS: ' + prefix + ' *******************');
+    // console.log('\n');
+  };
+
+}
