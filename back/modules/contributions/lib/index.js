@@ -9,6 +9,7 @@ var dynamoConfig = {
 };
 var dynamodbDocClient = new AWS.DynamoDB.DocumentClient(dynamoConfig);
 var tableName = 'slant-contributions-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
+var evaluationsTableName = 'slant-evaluations-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 
 module.exports.createContribution = function(event, cb) {
 
@@ -42,9 +43,17 @@ module.exports.getContribution = function(event, cb) {
 
 module.exports.getContributionEvaluations = function(event, cb) {
 
-  var response = [];
-
-  return cb(null, response);
+  var params = {
+    TableName : evaluationsTableName,
+    IndexName: 'contributionId-index',
+    KeyConditionExpression: 'contributionId = :hkey',
+    ExpressionAttributeValues: {
+      ':hkey': event.id
+    }
+  };
+  dynamodbDocClient.query(params, function(err, data) {
+    return cb(err, data.Items);
+  });
 };
 
 module.exports.getContributionUsers = function(event, cb) {
