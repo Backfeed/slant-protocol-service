@@ -12,19 +12,33 @@ var tableName = 'slant-evaluations-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 
 module.exports.createEvaluation = function(event, cb) {
 
-  var newEvaluation = {
-    "id": uuid.v4(),
-    "userId": event.userId,
-    "biddingId": event.biddingId,
-    "contributionId": event.contributionId,
-    "createdAt": Date.now()
-  };
   var params = {
     TableName : tableName,
-    Item: newEvaluation
+    RequestItems: {},
+    ReturnConsumedCapacity: 'NONE',
+    ReturnItemCollectionMetrics: 'NONE'
   };
-  dynamodbDocClient.put(params, function(err, data) {
-    return cb(err, newEvaluation);
+
+  var submittedEvaluations = [];
+  event.evaluations.forEach(function(element) {
+    var newEvaluation = {
+      "id": element.id || uuid.v4(),
+      "userId": event.userId,
+      "biddingId": event.biddingId,
+      "contributionId": event.contributionId,
+      "value": element.value,
+      "createdAt": Date.now()
+    };
+    var dbEvaluationWrapper = {
+      PutRequest: {
+        Item: newEvaluation
+      }
+    };
+    submittedEvaluations.push(dbEvaluationWrapper);
+  });
+  params.RequestItems[tableName] = submittedEvaluations;
+  dynamodbDocClient.batchWrite(params, function(err, data) {
+    return cb(err, {});
   });
 };
 
