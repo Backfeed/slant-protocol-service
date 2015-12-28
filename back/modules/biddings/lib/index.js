@@ -15,7 +15,7 @@ module.exports.createBidding = function(event, cb) {
 
   var newBidding = {
     "id": uuid.v4(),
-    "active": true,
+    "status": 'InProgress',
     "createdAt": Date.now()
   };
   var params = {
@@ -66,14 +66,14 @@ module.exports.endBidding = function(event, cb) {
     Key: {
       id: event.id
     },
-    UpdateExpression: 'set #act = :a, #win = :w, #end = :e',
+    UpdateExpression: 'set #sta = :s, #win = :w, #end = :e',
     ExpressionAttributeNames: {
-      '#act' : 'active',
+      '#sta' : 'status',
       '#win' : 'winningContribution',
       '#end' : 'endedAt'
     },
     ExpressionAttributeValues: {
-      ':a' : false,
+      ':s' : 'Completed',
       ':w' : {},
       ':e' : Date.now()
     },
