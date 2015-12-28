@@ -9,6 +9,8 @@ var dynamoConfig = {
 };
 var dynamodbDocClient = new AWS.DynamoDB.DocumentClient(dynamoConfig);
 var tableName = 'slant-users-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
+var contributionsTableName = 'slant-contributions-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
+var evaluationsTableName = 'slant-evaluations-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 
 
 module.exports.create = function(event, cb) {
@@ -46,16 +48,32 @@ module.exports.getUser = function(event, cb) {
 
 module.exports.getUserEvaluations = function(event, cb) {
 
-    var response = [];
-
-    return cb(null, response);
+    var params = {
+        TableName : evaluationsTableName,
+        IndexName: 'userId-index',
+        KeyConditionExpression: 'userId = :hkey',
+        ExpressionAttributeValues: {
+            ':hkey': event.id
+        }
+    };
+    dynamodbDocClient.query(params, function(err, data) {
+        return cb(err, data.Items);
+    });
 };
 
 module.exports.getUserContributions = function(event, cb) {
 
-    var response = [];
-
-    return cb(null, response);
+    var params = {
+        TableName : contributionsTableName,
+        IndexName: 'contributions-by-userId-index',
+        KeyConditionExpression: 'userId = :hkey',
+        ExpressionAttributeValues: {
+            ':hkey': event.id
+        }
+    };
+    dynamodbDocClient.query(params, function(err, data) {
+        return cb(err, data.Items);
+    });
 };
 
 module.exports.deleteUser = function(event, cb) {
@@ -91,19 +109,4 @@ module.exports.updateUser = function(event, cb) {
     return dynamodbDocClient.update(params, function(err, data) {
         return cb(err, data.Attributes);
     });
-
-    //var updatedUser = {};
-    //updatedUser.id = event.id;
-    //if (event.tokens) updatedUser.tokens = event.tokens;
-    //if (event.reputation) updatedUser.reputations = event.reputation;
-    //var params = {
-    //    TableName : tableName,
-    //    Key: {
-    //        id: event.id
-    //    },
-    //    Item: updatedUser
-    //};
-    //dynamodbDocClient.put(params, function(err, data) {
-    //    return cb(err, data);
-    //});
 };
