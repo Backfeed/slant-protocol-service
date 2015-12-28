@@ -9,7 +9,8 @@ var dynamoConfig = {
 };
 var dynamodbDocClient = new AWS.DynamoDB.DocumentClient(dynamoConfig);
 var tableName = 'slant-biddings-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
-var contributionTableName = 'slant-contributions-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
+var contributionsTableName = 'slant-contributions-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
+var usersTableName = 'slant-users-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 
 module.exports.createBidding = function(event, cb) {
 
@@ -43,9 +44,17 @@ module.exports.getBidding = function(event, cb) {
 
 module.exports.getBiddingContributions = function(event, cb) {
 
-  var response = [];
-
-  return cb(null, response);
+  var params = {
+    TableName : contributionsTableName,
+    IndexName: 'biddingId-index',
+    KeyConditionExpression: 'biddingId = :hkey',
+    ExpressionAttributeValues: {
+      ':hkey': event.id
+    }
+  };
+  dynamodbDocClient.query(params, function(err, data) {
+    return cb(err, data.Items);
+  });
 };
 
 module.exports.getBiddingUsers = function(event, cb) {
