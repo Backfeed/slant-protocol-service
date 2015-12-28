@@ -244,7 +244,7 @@
         ],
         "KeySchema": [
           {
-            "AttributeName": "contributionId",
+            "AttributeName": "id",
             "KeyType": "HASH"
           }
         ],
@@ -284,7 +284,7 @@
         ],
         "KeySchema": [
           {
-            "AttributeName": "biddingId",
+            "AttributeName": "id",
             "KeyType": "HASH"
           }
         ],
@@ -303,7 +303,7 @@
               {
                 "Ref": "ProjectName"
               },
-              "-contribution-",
+              "-contributions-",
               {
                 "Ref": "DataModelStage"
               }
