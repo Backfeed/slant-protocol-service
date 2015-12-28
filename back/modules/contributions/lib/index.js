@@ -23,8 +23,8 @@ module.exports.createContribution = function(event, cb) {
     Item: newContribution
   };
   dynamodbDocClient.put(params, function(err, data) {
-  });
     return cb(err, newContribution);
+  });
 };
 
 module.exports.getContribution = function(event, cb) {
