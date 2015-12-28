@@ -1,7 +1,7 @@
 'use strict';
 
 var  AWS     = require('aws-sdk'),
-    uuid    = require('node-uuid');
+     uuid    = require('node-uuid');
 
 var dynamoConfig = {
   sessionToken:    process.env.AWS_SESSION_TOKEN,
