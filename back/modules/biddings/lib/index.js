@@ -9,6 +9,7 @@ var dynamoConfig = {
 };
 var dynamodbDocClient = new AWS.DynamoDB.DocumentClient(dynamoConfig);
 var tableName = 'slant-biddings-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
+var contributionTableName = 'slant-contributions-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 
 module.exports.createBidding = function(event, cb) {
 
@@ -56,22 +57,31 @@ module.exports.getBiddingUsers = function(event, cb) {
 
 module.exports.endBidding = function(event, cb) {
 
+  // Protocol calculates the winning contribution
+  var winningContribution = getWinningContribution('694d7f56-12db-450c-90aa-a278e38e96f0');
+
+  // the callback updates the DB
   var params = {
     TableName: tableName,
     Key: {
       id: event.id
     },
-    UpdateExpression: 'set #act = :a, #end = :e',
-    ExpressionAttributeNames: {'#act' : 'active', '#end' : 'endedAt'},
+    UpdateExpression: 'set #act = :a, #win = :w, #end = :e',
+    ExpressionAttributeNames: {
+      '#act' : 'active',
+      '#win' : 'winningContribution',
+      '#end' : 'endedAt'
+    },
     ExpressionAttributeValues: {
       ':a' : false,
+      ':w' : {},
       ':e' : Date.now()
     },
-    ReturnValues: 'ALL_OLD'
+    ReturnValues: 'ALL_NEW'
   };
 
   return dynamodbDocClient.update(params, function(err, data) {
-    return cb(err, data);
+    return cb(err, data.Attributes);
   });
 };
 
@@ -87,3 +97,16 @@ module.exports.deleteBidding = function(event, cb) {
     return cb(err, params.Key);
   });
 };
+
+function getWinningContribution(contributionId) {
+  var params = {
+    TableName : contributionTableName,
+    Key: {
+      id:contributionId
+    }
+  };
+  dynamodbDocClient.get(params, function(err, data) {
+    if (err) return {}; //err;
+    else return data.Item;
+  });
+}
