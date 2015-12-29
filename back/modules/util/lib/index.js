@@ -15,6 +15,7 @@ var hLog = log('HELPERS');
 
 module.exports = {
   cacheTotalRep: cacheTotalRep,
+  getTotalRep: getTotalRep,
   log: log
 }
 
@@ -32,6 +33,22 @@ function cacheTotalRep(event, cb) {
   return dynamodbDocClient.update(params, function(err, data) {
     hLog('cacheUsersReputation: CB: ', data);
     return cb(err, data);
+  });
+}
+
+function getTotalRep(event, cb) {
+
+  var params = {
+    TableName : cachingTableName,
+    Key: { type: "totalRepInSystem" }
+  };
+
+  return dynamodbDocClient.get(params, function(err, data) {
+    if (_.isEmpty(data)) {
+      err = '404:Resource not found.';
+      return cb(err);
+    }
+    return cb(err, data.Item.theValue);
   });
 }
 
