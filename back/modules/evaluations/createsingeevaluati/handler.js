@@ -84,13 +84,12 @@ module.exports.handler = function(event, context) {
       totalVoteRep = getTotalEvaluatorsWhoVotedSameRep(evaluators, event.value);
       log('totalVoteRep', totalVoteRep);  
 
-      // wrong
-      currentUser = _.last(evaluators);
-
-      currentUserRep = currentUser.reputation;
+      currentUser = getCurrentUserFromEvaluators(evaluators, event.userId);
       log('currentUser: ', currentUser);
 
-      totalContributionRep = getTotalContributionRep(evaluators);
+      currentUserRep = currentUser.reputation;
+
+      totalContributionRep = calcTotalContributionRep(evaluators);
       log("totalContributionRep", totalContributionRep);
 
       lambda.invoke({
@@ -101,7 +100,8 @@ module.exports.handler = function(event, context) {
           return;
         }
         if(data.Payload){
-          totalRepInSystem = data.Payload
+
+          totalRepInSystem = data.Payload;
           log('totalRepInSystem', totalRepInSystem);
 
           evaluators = updateEvaluatorsRep(evaluators, stake, currentUserRep, totalRepInSystem);
@@ -110,7 +110,7 @@ module.exports.handler = function(event, context) {
           evaluators = updateEvaluatorsRepForSameVoters(evaluators, stake, currentUserRep, totalRepInSystem, totalContributionRep, totalVoteRep, event.value);
           log('evaluators with updated rep for same voters', evaluators);
 
-          evaluators = updateEvaluatorsRepForCurrentUser(evaluators, stake, currentUserRep, totalContributionRep, totalVoteRep, totalRepInSystem);
+          currentUser.reputation = burnRepForCurrentUser(stake, currentUserRep, totalContributionRep, totalVoteRep, totalRepInSystem);
           log('evaluators with updated rep for current voter', evaluators);
         }
       });
@@ -142,7 +142,7 @@ function getParamsForQueringEvaluators(evaluations) {
   return params;
 }
 
-function getTotalContributionRep(evaluators) {
+function calcTotalContributionRep(evaluators) {
   return _.reduce(evaluators, function(memo, evaluator){ 
     return memo + evaluator.reputation;
   }, 0);
@@ -182,18 +182,14 @@ function getTotalEvaluatorsWhoVotedSameRep(evaluators, value) {
   }, 0);
 }
 
-function getTotalContributionRep(evaluators) {
-  return _.reduce(evaluators, function(memo, evaluator){ 
-    return memo + evaluator.reputation;
-  }, 0);
-}
-
-function updateEvaluatorsRepForCurrentUser(evaluators, stake, currentUserRep, totalContributionRep, totalVoteRep, totalRepInSystem) {
-  // wrong
-  var cUser = evaluators.pop();
-  cUser.reputation = currentUserRep * (1 - stake)
+function burnRepForCurrentUser(stake, currentUserRep, totalContributionRep, totalVoteRep, totalRepInSystem) {
+  return currentUserRep * (1 - stake)
     + currentUserRep * stake * totalContributionRep / totalRepInSystem
     * currentUserRep / totalVoteRep;
-  evaluators.push(cUser); 
-  return evaluators;
+}
+
+function getCurrentUserFromEvaluators(evaluators, currentUserId) {
+  return _.find(evaluators, function(evaluator) {
+    return evaluator.id === currentUserId;
+  });
 }
