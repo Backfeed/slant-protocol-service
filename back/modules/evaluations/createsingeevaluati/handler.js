@@ -19,6 +19,8 @@ var lambda = new AWS.Lambda({
   region: process.env.AWS_REGION
 });
 var uuid = require('node-uuid');
+var Immutable = require('immutable');
+var immutableMap = Immutable.Map({ totalEvaluatorsRepBefore: 0 });
 
 var dynamoConfig = {
   sessionToken:    process.env.AWS_SESSION_TOKEN,
@@ -78,6 +80,9 @@ module.exports.handler = function(event, context) {
       evaluators = data.Responses['slant-users-development'];
       log('evaluators: ', evaluators);
 
+      immutableMap = immutableMap.set('totalEvaluatorsRepBefore', calcTotalEvaluatorsRep(evaluators));
+      log('totalEvaluatorsRepBefore', immutableMap.get('totalEvaluatorsRepBefore'));
+
       evaluators = addVoteValueToEvaluators(evaluators, evaluations);
       log('evaluators after adding vote value: ', evaluators);
 
@@ -112,6 +117,10 @@ module.exports.handler = function(event, context) {
 
           currentUser.reputation = burnRepForCurrentUser(stake, currentUserRep, totalContributionRep, totalVoteRep, totalRepInSystem);
           log('evaluators with updated rep for current voter', evaluators);
+
+          updateEvaluatorsRepToDb(evaluators);
+
+          cacheNewTotalReputationToDb(evaluators, totalRepInSystem);
         }
       });
     });
@@ -194,5 +203,55 @@ function burnRepForCurrentUser(stake, currentUserRep, totalContributionRep, tota
 function getCurrentUserFromEvaluators(evaluators, currentUserId) {
   return _.find(evaluators, function(evaluator) {
     return evaluator.id === currentUserId;
+  });
+}
+
+function updateEvaluatorsRepToDb(evaluators) {
+  return _.each(evaluators, updateEvaluatorRepToDb);
+}
+
+function updateEvaluatorRepToDb(evaluator) {
+  var params = {
+    TableName: usersTableName,
+    Key: { id: evaluator.id },
+    UpdateExpression: 'set #rep = :r',
+    ExpressionAttributeNames: { '#rep' : 'reputation' },
+    ExpressionAttributeValues: { ':r' : evaluator.reputation },
+    ReturnValues: 'ALL_NEW'
+  };
+
+  //ConditionExpression: 'attribute_exists',
+  return dynamodbDocClient.update(params, function(err, data) {
+    if (err) {
+      return log("updateEvaluatorRepToDb: err", err);
+    }
+    log("updateEvaluatorRepToDb", data);
+  });
+
+}
+
+function calcTotalEvaluatorsRep(evaluators) {
+  return _.reduce(evaluators, function(memo, evaluator) {
+    return memo + evaluator.reputation;
+  }, 0);
+}
+
+function cacheNewTotalReputationToDb(evaluators, totalRepInSystem) {
+  var before = immutableMap.get('totalEvaluatorsRepBefore');
+  var after = calcTotalEvaluatorsRep(evaluators);
+  var diff = after - before;
+  var newTotalRepInSystem = totalRepInSystem + diff;
+  log('total evaluators rep: before', before, 'after', after, 'diff', diff);
+  log('totalRepInSystemBefore', totalRepInSystem, 'newTotalRepInSystem', newTotalRepInSystem);
+  lambda.invoke({
+    FunctionName: 'slant-cachetotalrep',
+    Payload: JSON.stringify({ reputation: newTotalRepInSystem })
+  }, function(error, data) {
+    if (error) {
+      log('cacheNewTotalReputationToDb', 'error', error);
+      return;
+    }
+    log('cacheNewTotalReputationToDb', data.Payload);
+    return;
   });
 }
