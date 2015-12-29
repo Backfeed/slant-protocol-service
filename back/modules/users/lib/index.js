@@ -11,6 +11,7 @@ var dynamoConfig = {
 
 var dynamodbDocClient = new AWS.DynamoDB.DocumentClient(dynamoConfig);
 var tableName = 'slant-users-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
+var usersReptableName = 'slant-caching-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 var contributionsTableName = 'slant-contributions-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 var evaluationsTableName = 'slant-evaluations-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 var hLog = log('HELPERS');
@@ -22,6 +23,7 @@ module.exports = {
   deleteUser: deleteUser,
   getUserEvaluations: getUserEvaluations,
   getUserContributions: getUserContributions,
+  cacheUsersReputation:  cacheUsersReputation,
   log: log
 }
 
@@ -123,6 +125,22 @@ function updateUser(event, cb) {
   //ConditionExpression: 'attribute_exists',
   return dynamodbDocClient.update(params, function(err, data) {
     return cb(err, data.Attributes);
+  });
+}
+
+function cacheUsersReputation(allUsersRep, cb) {
+  var params = {
+    TableName: usersReptableName,
+    Key: { type: "totalRepInSystem" },
+    UpdateExpression: 'set #val = :v',
+    ExpressionAttributeNames: { '#val' : 'theValue' },
+    ExpressionAttributeValues: { ':v' : allUsersRep },
+    ReturnValues: 'ALL_NEW'
+  };
+
+  return dynamodbDocClient.update(params, function(err, data) {
+    hLog('cacheUsersReputation: CB: ', data);
+    return cb(err, data);
   });
 }
 
