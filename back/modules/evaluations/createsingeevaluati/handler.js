@@ -107,7 +107,7 @@ module.exports.handler = function(event, context) {
           evaluators = updateEvaluatorsRep(evaluators, stake, currentUserRep, totalRepInSystem);
           log('evaluators with updated rep', evaluators);
 
-          evaluators = updateEvaluatorsRepForSameVoters(evaluators, stake, currentUserRep, totalRepInSystem, totalContributionRep, totalVoteRep, event.value);
+          evaluators = updateEvaluatorsRepForSameVoters(evaluators, stake, currentUserRep, totalRepInSystem, totalContributionRep, totalVoteRep, event.value, event.userId);
           log('evaluators with updated rep for same voters', evaluators);
 
           currentUser.reputation = burnRepForCurrentUser(stake, currentUserRep, totalContributionRep, totalVoteRep, totalRepInSystem);
@@ -155,8 +155,11 @@ function updateEvaluatorsRep(evaluators, stake, currentUserRep, totalRepInSystem
   });
 }
 
-function updateEvaluatorsRepForSameVoters(evaluators, stake, currentUserRep, totalRepInSystem, totalContributionRep, totalVoteRep, currentEvaluationValue) {
+function updateEvaluatorsRepForSameVoters(evaluators, stake, currentUserRep, totalRepInSystem, totalContributionRep, totalVoteRep, currentEvaluationValue, currentUserId) {
   return _.map(evaluators, function(evaluator) {
+    if (evaluator.id === currentUserId) {
+      return evaluator;
+    }
     if ( evaluator.value === currentEvaluationValue ) {
       evaluator.reputation += currentUserRep * stake * totalContributionRep / totalRepInSystem * evaluator.reputation / totalVoteRep;
     }
