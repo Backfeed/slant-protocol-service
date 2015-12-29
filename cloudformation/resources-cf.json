@@ -16,13 +16,15 @@
     "Stage": {
       "Type": "String",
       "AllowedValues": [
-        "development"
+        "development",
+        "v1"
       ]
     },
     "DataModelStage": {
       "Type": "String",
       "AllowedValues": [
-        "development"
+        "development",
+        "v1"
       ]
     },
     "NotificationEmail": {
@@ -149,7 +151,9 @@
             },
             {
               "Effect": "Allow",
-              "Action": [ "*" ],
+              "Action": [
+                "*"
+              ],
               "Resource": {
                 "Fn::Join": [
                   ":",
@@ -194,7 +198,7 @@
     },
     "UsersDynamoDB": {
       "Type": "AWS::DynamoDB::Table",
-      "DeletionPolicy" : "Retain",
+      "DeletionPolicy": "Retain",
       "Properties": {
         "AttributeDefinitions": [
           {
@@ -234,7 +238,7 @@
     },
     "EvaluationsDynamoDB": {
       "Type": "AWS::DynamoDB::Table",
-      "DeletionPolicy" : "Retain",
+      "DeletionPolicy": "Retain",
       "Properties": {
         "AttributeDefinitions": [
           {
@@ -274,7 +278,7 @@
     },
     "ContributionsDynamoDB": {
       "Type": "AWS::DynamoDB::Table",
-      "DeletionPolicy" : "Retain",
+      "DeletionPolicy": "Retain",
       "Properties": {
         "AttributeDefinitions": [
           {
@@ -314,7 +318,7 @@
     },
     "BiddingsDynamoDB": {
       "Type": "AWS::DynamoDB::Table",
-      "DeletionPolicy" : "Retain",
+      "DeletionPolicy": "Retain",
       "Properties": {
         "AttributeDefinitions": [
           {
