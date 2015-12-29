@@ -23,9 +23,8 @@ module.exports = {
   deleteUser: deleteUser,
   getUserEvaluations: getUserEvaluations,
   getUserContributions: getUserContributions,
-  cacheUsersReputation:  cacheUsersReputation,
   log: log
-}
+};
 
 function create(event, cb) {
 
