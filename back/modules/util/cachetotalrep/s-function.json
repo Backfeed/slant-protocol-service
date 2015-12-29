@@ -1,17 +1,17 @@
 {
   "functions": {
-    "cacheusersreputatio": {
+    "cachetotalrep": {
       "custom": {
         "excludePatterns": [],
         "envVars": []
       },
-      "handler": "modules/users/cacheusersreputatio/handler.handler",
+      "handler": "modules/util/cachetotalrep/handler.handler",
       "timeout": 6,
       "memorySize": 1024,
       "eventSourceArn": "",
       "endpoints": [
         {
-          "path": "users/cacheusersreputatio",
+          "path": "util/cachetotalrep",
           "method": "GET",
           "authorizationType": "none",
           "apiKeyRequired": false,

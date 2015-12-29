@@ -13,19 +13,15 @@ var ServerlessHelpers = require('serverless-helpers-js').loadEnv();
 // Require Logic
 var lib = require('../lib');
 
-var log = lib.log('CACHE USERS REPUTATION');
+var log = lib.log("CACHE TOTAL REP");
 
 // Lambda Handler
 module.exports.handler = function(event, context) {
 
   log("event", event);
 
-  lib.cacheUsersReputation(event.reputation, function(error, response) {
-    if (error) {
-      log("cacheUsersReputation CB: err", error);
-      return context.fail("cacheUsersReputation CB: err" + error);
-    } 
-    log("cacheUsersReputation CB", response);
-    return context.done(null, response);
+  lib.cacheTotalRep(event, function(error, response) {
+    return context.done(error, response);
   });
+
 };

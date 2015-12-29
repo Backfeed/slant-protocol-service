@@ -128,30 +128,13 @@ function updateUser(event, cb) {
   });
 }
 
-function cacheUsersReputation(allUsersRep, cb) {
-  var params = {
-    TableName: usersReptableName,
-    Key: { type: "totalRepInSystem" },
-    UpdateExpression: 'set #val = :v',
-    ExpressionAttributeNames: { '#val' : 'theValue' },
-    ExpressionAttributeValues: { ':v' : allUsersRep },
-    ReturnValues: 'ALL_NEW'
-  };
-
-  return dynamodbDocClient.update(params, function(err, data) {
-    hLog('cacheUsersReputation: CB: ', data);
-    return cb(err, data);
-  });
-}
-
-
 function log(prefix) {
 
   return function() {
     console.log('***************** ' + 'USERS: ' + prefix + ' *******************');
     _.each(arguments, function(msg, i) { console.log(msg); });
     console.log('***************** /' + 'USERS: ' + prefix + ' *******************');
-    // console.log('\n');
+    console.log('\n');
   };
 
 }
