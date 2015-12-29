@@ -11,6 +11,7 @@ var dynamoConfig = {
 var dynamodbDocClient = new AWS.DynamoDB.DocumentClient(dynamoConfig);
 var tableName = 'slant-biddings-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 var contributionsTableName = 'slant-contributions-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
+var evaluationsTableName = 'slant-evaluations-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 var usersTableName = 'slant-users-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 
 var hLog = log('HELPERS');
@@ -20,11 +21,12 @@ module.exports = {
   getBidding: getBidding,
   getBiddingContributions: getBiddingContributions,
   getBiddingUsers: getBiddingUsers,
+  getBiddingUserEvaluations: getBiddingUserEvaluations,
   endBidding: endBidding,
   deleteBidding: deleteBidding,
   getWinningContribution: getWinningContribution,
   log: log
-}
+};
 
 function createBidding(event, cb) {
 
@@ -69,14 +71,31 @@ function getBiddingContributions(event, cb) {
   dynamodbDocClient.query(params, function(err, data) {
     return cb(err, data.Items);
   });
-};
+}
 
 function getBiddingUsers(event, cb) {
 
   var response = [];
 
   return cb(null, response);
-};
+}
+
+
+function getBiddingUserEvaluations(event, cb) {
+
+  var params = {
+    TableName : evaluationsTableName,
+    IndexName: 'evaluations-biddingId-userId-index',
+    KeyConditionExpression: 'biddingId = :hkey and userId = :rkey',
+    ExpressionAttributeValues: {
+      ':hkey': event.id,
+      ':rkey': event.userId
+    }
+  };
+  dynamodbDocClient.query(params, function(err, data) {
+    return cb(err, data.Items);
+  });
+}
 
 function endBidding(event, cb) {
 

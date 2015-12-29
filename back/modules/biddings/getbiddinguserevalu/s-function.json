@@ -1,0 +1,42 @@
+{
+  "functions": {
+    "getbiddinguserevalu": {
+      "custom": {
+        "excludePatterns": [],
+        "envVars": []
+      },
+      "handler": "modules/biddings/getbiddinguserevalu/handler.handler",
+      "timeout": 6,
+      "memorySize": 1024,
+      "eventSourceArn": "",
+      "endpoints": [
+        {
+          "path": "biddings/{id}/users/{userId}/evaluations",
+          "method": "GET",
+          "authorizationType": "none",
+          "apiKeyRequired": true,
+          "requestParameters": {
+            "integration.request.querystring.id": "method.request.querystring.id",
+            "integration.request.querystring.userId": "method.request.querystring.userId"
+          },
+          "requestTemplates": {
+            "application/json": "{\"id\":\"$input.params('id')\", \"userId\":\"$input.params('userId')\"}"
+          },
+          "responses": {
+            "400": {
+              "statusCode": "400"
+            },
+            "default": {
+              "statusCode": "200",
+              "responseParameters": {},
+              "responseModels": {},
+              "responseTemplates": {
+                "application/json": ""
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
