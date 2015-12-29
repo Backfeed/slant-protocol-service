@@ -106,7 +106,7 @@ module.exports.handler = function(event, context) {
         }
         if(data.Payload){
 
-          totalRepInSystem = data.Payload;
+          totalRepInSystem = parseFloat(data.Payload);
           log('totalRepInSystem', totalRepInSystem);
 
           evaluators = updateEvaluatorsRep(evaluators, stake, currentUserRep, totalRepInSystem);
