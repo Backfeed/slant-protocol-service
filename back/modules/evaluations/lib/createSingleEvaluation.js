@@ -28,6 +28,7 @@ var dynamoConfig = {
 var dynamodbDocClient = new AWS.DynamoDB.DocumentClient(dynamoConfig);
 var tableName = 'slant-evaluations-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 var usersTableName = 'slant-users-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
+var contributionsTableName = 'slant-contributions-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 
 var log = log('CREATE SINGLE');
 
@@ -47,6 +48,8 @@ module.exports.execute = function(event, context) {
   var totalRepInSystem;
   var totalContributionRep;
   var totalContributionPositiveRep;
+
+  addCurrentUserIdToContributionVotersArray(event.contributionId, event.userId, event.value);
 
   var paramsForQueringEvaluations = {
     TableName : tableName,
@@ -265,4 +268,35 @@ function log(prefix) {
     console.log('\n');
   };
 
+}
+
+function addCurrentUserIdToContributionVotersArray(contributionId, userId, value) {
+  var params = {
+    TableName: contributionsTableName,
+    AttributeUpdates: {},
+    Key: { id: contributionId },
+    ReturnValues: 'ALL_NEW'
+  };
+
+  // store id here
+  var columnName = value === 1 ? 'positiveEvaluators' : 'negativeEvaluators';
+  params.AttributeUpdates[columnName] = {
+    Action: 'ADD',
+    Value: [userId]
+  };
+
+  // remove id here in case user voted before
+  // TODO :: make it work
+  // var otherColumnName = columnName === 'positiveEvaluators' ? 'negativeEvaluators' : 'positiveEvaluators';
+  // params.AttributeUpdates[otherColumnName] = {
+  //   Action: 'DELETE',
+  //   Value: [userId]
+  // };
+
+  return dynamodbDocClient.update(params, function(err, data) {
+    if (err) {
+      return log("addCurrentUserIdToContributionVotersArray: err", err);
+    }
+    log("addCurrentUserIdToContributionVotersArray", data);
+  });
 }
