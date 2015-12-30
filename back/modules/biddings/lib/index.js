@@ -24,6 +24,7 @@ module.exports = {
   getBiddingUsers: getBiddingUsers,
   getBiddingUserEvaluations: getBiddingUserEvaluations,
   endBidding: endBidding,
+  getContributions: getContributions,
   deleteBidding: deleteBidding,
   getWinningContribution: getWinningContribution,
   log: log
