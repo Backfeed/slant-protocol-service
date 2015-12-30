@@ -81,7 +81,7 @@ function getBiddingContributions(event, cb) {
       if (contributions && event.userId)
       {
         _.each(contributions, function(element) {
-          var myEval = _.find(evaluations, 'contributionId', element.id);
+          var myEval = _.find(evaluations, function(item) { return item.contributionId === element.id});
           if (myEval) {
             element.userContext = {};
             element.userContext.evaluation = {};
@@ -187,7 +187,7 @@ function endBidding(event, cb) {
       console.log('DB update CB: data', data);
       return cb(err, data.Attributes);
     });
-    
+
   });
 
 };
