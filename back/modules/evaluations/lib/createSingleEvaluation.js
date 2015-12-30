@@ -20,7 +20,7 @@ var lambda = new AWS.Lambda({
 var uuid = require('node-uuid');
 var Immutable = require('immutable');
 var immutableMap = Immutable.Map({ totalEvaluatorsRepBefore: 0 });
-
+var async = require('async');
 var dynamoConfig = {
   sessionToken:    process.env.AWS_SESSION_TOKEN,
   region:          process.env.AWS_REGION
@@ -34,7 +34,7 @@ var log = log('CREATE SINGLE');
 
 
 // Lambda Handler
-module.exports.execute = function(event, context) {
+module.exports.execute = function(event, cb) {
 
   log('event', event);
   var currentUser;
@@ -126,7 +126,14 @@ module.exports.execute = function(event, context) {
 
           updateEvaluatorsRepToDb(evaluators);
 
-          cacheNewTotalReputationToDb(evaluators, totalRepInSystem);
+          async.waterfall([
+            function(callback) {
+              cacheNewTotalReputationToDb(evaluators, totalRepInSystem, callback);
+            }
+          ], function (err, result) {
+            log('err', err, 'result', result);
+            return cb(null, result);
+          });
         }
       });
     });
@@ -242,7 +249,7 @@ function calcTotalEvaluatorsRep(evaluators) {
   }, 0);
 }
 
-function cacheNewTotalReputationToDb(evaluators, totalRepInSystem) {
+function cacheNewTotalReputationToDb(evaluators, totalRepInSystem, callback) {
   var before = immutableMap.get('totalEvaluatorsRepBefore');
   var after = calcTotalEvaluatorsRep(evaluators);
   var diff = after - before;
@@ -255,10 +262,10 @@ function cacheNewTotalReputationToDb(evaluators, totalRepInSystem) {
   }, function(error, data) {
     if (error) {
       log('cacheNewTotalReputationToDb', 'error', error);
-      return;
+      return callback(error);
     }
     log('cacheNewTotalReputationToDb', data.Payload);
-    return;
+    return callback(null, data.Payload);
   });
 }
 

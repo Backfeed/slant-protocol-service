@@ -37,7 +37,9 @@ var log = lib.log('CREATE SINGLE');
 // Lambda Handler
 module.exports.handler = function(event, context) {
 
-  createSingleEvaluation.execute(event);
+  createSingleEvaluation.execute(event, function(error, response) {
+    return context.done(error, response);
+  });
 
 
   // var currentUser;
