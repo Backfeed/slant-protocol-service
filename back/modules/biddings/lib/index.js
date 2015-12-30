@@ -1,8 +1,9 @@
 'use strict';
 
-var _    = require('underscore');
-var AWS  = require('aws-sdk');
-var uuid = require('node-uuid');
+var _     = require('underscore');
+var AWS   = require('aws-sdk');
+var uuid  = require('node-uuid');
+var async = require('async');
 
 var dynamoConfig = {
   sessionToken:    process.env.AWS_SESSION_TOKEN,
@@ -73,6 +74,16 @@ function getBiddingContributions(event, cb) {
     }
   };
   dynamodbDocClient.query(params, function(err, data) {
+    if (data.Items && event.userId)
+    {
+      _.each(data.Items, function(element) {
+        if (element.userId === event.userId) {
+          element.userContext = {};
+          element.userContext.id = 1;
+          element.userContext.value = 1;
+        }
+      });
+    }
     return cb(err, data.Items);
   });
 }
@@ -86,6 +97,16 @@ function getBiddingUsers(event, cb) {
 
 
 function getBiddingUserEvaluations(event, cb) {
+  async.waterfall([
+    function(callback) {
+      getUserEvaluations(event, callback);
+    }
+  ], function (err, result) {
+    return cb(null, result.items);
+  });
+}
+
+function getUserEvaluations(event, cb) {
 
   var params = {
     TableName : evaluationsTableName,
@@ -97,7 +118,10 @@ function getBiddingUserEvaluations(event, cb) {
     }
   };
   dynamodbDocClient.query(params, function(err, data) {
-    return cb(err, data.Items);
+    return cb(null, {
+      'err': err,
+      'items': data.Items
+    });
   });
 }
 

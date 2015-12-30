@@ -17,10 +17,10 @@
           "apiKeyRequired": true,
           "requestParameters": {
             "integration.request.querystring.id": "method.request.querystring.id",
-            "integration.request.querystring.active": "method.request.querystring.active"
+            "integration.request.querystring.userId": "method.request.querystring.userId"
           },
           "requestTemplates": {
-            "application/json": "{\"id\":\"$input.params('id')\" , \"active\":\"$input.params('active')\"}"
+            "application/json": "{\"id\":\"$input.params('id')\" , \"userId\":\"$input.params('userId')\"}"
           },
           "responses": {
             "400": {
