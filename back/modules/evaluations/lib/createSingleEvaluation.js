@@ -193,7 +193,7 @@ function updateEvaluatorsRepToDb(evaluators, callback) {
     submittedEvaluators.push(dbEvaluatorsWrapper);
   });
 
-  params.RequestItems[tableName] = submittedEvaluators;
+  params.RequestItems[usersTableName] = submittedEvaluators;
   dynamodbDocClient.batchWrite(params, function(err, data) {
     callback(err, data);
   });
