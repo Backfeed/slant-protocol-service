@@ -11,7 +11,6 @@
 var ServerlessHelpers = require('serverless-helpers-js').loadEnv();
 
 // Require Logic
-var lib = require('../lib');
 
 var _    = require('underscore');
 var AWS  = require('aws-sdk');
@@ -30,11 +29,13 @@ var dynamodbDocClient = new AWS.DynamoDB.DocumentClient(dynamoConfig);
 var tableName = 'slant-evaluations-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 var usersTableName = 'slant-users-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 
-var log = lib.log('CREATE SINGLE');
+var log = log('CREATE SINGLE');
 
 
 // Lambda Handler
 module.exports.execute = function(event, context) {
+
+  log('event', event);
   var currentUser;
   var currentUserRep;
   var stake = 0.05;
@@ -253,4 +254,15 @@ function cacheNewTotalReputationToDb(evaluators, totalRepInSystem) {
     log('cacheNewTotalReputationToDb', data.Payload);
     return;
   });
+}
+
+function log(prefix) {
+
+  return function() {
+    console.log('***************** ' + 'EVALUATIONS: ' + prefix + ' *******************');
+    _.each(arguments, function(msg, i) { console.log(msg); });
+    console.log('***************** /' + 'EVALUATIONS: ' + prefix + ' *******************');
+    console.log('\n');
+  };
+
 }

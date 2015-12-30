@@ -12,6 +12,7 @@ var ServerlessHelpers = require('serverless-helpers-js').loadEnv();
 
 // Require Logic
 var lib = require('../lib');
+var createSingleEvaluation = require('../lib/createSingleEvaluation');
 
 var _    = require('underscore');
 var AWS  = require('aws-sdk');
@@ -35,98 +36,101 @@ var log = lib.log('CREATE SINGLE');
 
 // Lambda Handler
 module.exports.handler = function(event, context) {
-  var currentUser;
-  var currentUserRep;
-  var stake = 0.05;
-  var formerEvaluations;
-  var evaluations;
-  var evaluators;
-  var evaluatorsWhoVotedSame;
-  var totalVoteRep;
-  var totalRepInSystem;
-  var totalContributionRep;
-  var totalContributionPositiveRep;
+
+  createSingleEvaluation.execute(event);
 
 
-  var paramsForQueringEvaluations = {
-    TableName : tableName,
-    IndexName: 'contributionId-index',
-    KeyConditionExpression: 'contributionId = :hkey',
-    ExpressionAttributeValues: { ':hkey': event.contributionId }
-  };
+  // var currentUser;
+  // var currentUserRep;
+  // var stake = 0.05;
+  // var formerEvaluations;
+  // var evaluations;
+  // var evaluators;
+  // var evaluatorsWhoVotedSame;
+  // var totalVoteRep;
+  // var totalRepInSystem;
+  // var totalContributionRep;
+  // var totalContributionPositiveRep;
 
-  dynamodbDocClient.query(paramsForQueringEvaluations, function(err, data) {
-    if(err) {
-      log('createEvaluation: get former evaluations: err: ', err);
-      return;
-    }
+  // var paramsForQueringEvaluations = {
+  //   TableName : tableName,
+  //   IndexName: 'contributionId-index',
+  //   KeyConditionExpression: 'contributionId = :hkey',
+  //   ExpressionAttributeValues: { ':hkey': event.contributionId }
+  // };
 
-    formerEvaluations = data.Items;
-    log('formerEvaluations', formerEvaluations);
+  // dynamodbDocClient.query(paramsForQueringEvaluations, function(err, data) {
+  //   if(err) {
+  //     log('createEvaluation: get former evaluations: err: ', err);
+  //     return;
+  //   }
 
-    // add the evalution of current user
-    formerEvaluations.push(event);
-    evaluations = formerEvaluations;
-    log('evaluations', evaluations);
+  //   formerEvaluations = data.Items;
+  //   log('formerEvaluations', formerEvaluations);
 
-    var paramsForQueringEvaluators = getParamsForQueringEvaluators(evaluations);
+  //   // add the evalution of current user
+  //   formerEvaluations.push(event);
+  //   evaluations = formerEvaluations;
+  //   log('evaluations', evaluations);
 
-    dynamodbDocClient.batchGet(paramsForQueringEvaluators, function(err, data) {
-      if (err) {
-        log('createEvaluation: get former evaluators: err: ', err);
-        return;
-      }
+  //   var paramsForQueringEvaluators = getParamsForQueringEvaluators(evaluations);
 
-      evaluators = data.Responses['slant-users-development'];
-      log('evaluators: ', evaluators);
+  //   dynamodbDocClient.batchGet(paramsForQueringEvaluators, function(err, data) {
+  //     if (err) {
+  //       log('createEvaluation: get former evaluators: err: ', err);
+  //       return;
+  //     }
 
-      immutableMap = immutableMap.set('totalEvaluatorsRepBefore', calcTotalEvaluatorsRep(evaluators));
-      log('totalEvaluatorsRepBefore', immutableMap.get('totalEvaluatorsRepBefore'));
+  //     evaluators = data.Responses[usersTableName];
+  //     log('evaluators: ', evaluators);
 
-      evaluators = addVoteValueToEvaluators(evaluators, evaluations);
-      log('evaluators after adding vote value: ', evaluators);
+  //     immutableMap = immutableMap.set('totalEvaluatorsRepBefore', calcTotalEvaluatorsRep(evaluators));
+  //     log('totalEvaluatorsRepBefore', immutableMap.get('totalEvaluatorsRepBefore'));
 
-      totalVoteRep = getTotalEvaluatorsWhoVotedSameRep(evaluators, event.value);
-      log('totalVoteRep', totalVoteRep);  
+  //     evaluators = addVoteValueToEvaluators(evaluators, evaluations);
+  //     log('evaluators after adding vote value: ', evaluators);
 
-      currentUser = getCurrentUserFromEvaluators(evaluators, event.userId);
-      log('currentUser: ', currentUser);
+  //     totalVoteRep = getTotalEvaluatorsWhoVotedSameRep(evaluators, event.value);
+  //     log('totalVoteRep', totalVoteRep);  
 
-      currentUserRep = currentUser.reputation;
+  //     currentUser = getCurrentUserFromEvaluators(evaluators, event.userId);
+  //     log('currentUser: ', currentUser);
 
-      totalContributionRep = calcTotalContributionRep(evaluators);
-      log("totalContributionRep", totalContributionRep);
+  //     currentUserRep = currentUser.reputation;
 
-      lambda.invoke({
-        FunctionName: 'slant-gettotalrep'
-      }, function(error, data) {
-        if (error) {
-          log('slant-gettotalrep', 'error', error);
-          return;
-        }
-        if(data.Payload){
+  //     totalContributionRep = calcTotalContributionRep(evaluators);
+  //     log("totalContributionRep", totalContributionRep);
 
-          totalRepInSystem = parseFloat(data.Payload);
-          log('totalRepInSystem', totalRepInSystem);
+  //     lambda.invoke({
+  //       FunctionName: 'slant-gettotalrep'
+  //     }, function(error, data) {
+  //       if (error) {
+  //         log('slant-gettotalrep', 'error', error);
+  //         return;
+  //       }
+  //       if(data.Payload){
 
-          evaluators = updateEvaluatorsRep(evaluators, stake, currentUserRep, totalRepInSystem);
-          log('evaluators with updated rep', evaluators);
+  //         totalRepInSystem = parseFloat(data.Payload);
+  //         log('totalRepInSystem', totalRepInSystem);
 
-          evaluators = updateEvaluatorsRepForSameVoters(evaluators, stake, currentUserRep, totalRepInSystem, totalContributionRep, totalVoteRep, event.value, event.userId);
-          log('evaluators with updated rep for same voters', evaluators);
+  //         evaluators = updateEvaluatorsRep(evaluators, stake, currentUserRep, totalRepInSystem);
+  //         log('evaluators with updated rep', evaluators);
 
-          currentUser.reputation = burnRepForCurrentUser(stake, currentUserRep, totalContributionRep, totalVoteRep, totalRepInSystem);
-          log('evaluators with updated rep for current voter', evaluators);
+  //         evaluators = updateEvaluatorsRepForSameVoters(evaluators, stake, currentUserRep, totalRepInSystem, totalContributionRep, totalVoteRep, event.value, event.userId);
+  //         log('evaluators with updated rep for same voters', evaluators);
 
-          updateEvaluatorsRepToDb(evaluators);
+  //         currentUser.reputation = burnRepForCurrentUser(stake, currentUserRep, totalContributionRep, totalVoteRep, totalRepInSystem);
+  //         log('evaluators with updated rep for current voter', evaluators);
 
-          cacheNewTotalReputationToDb(evaluators, totalRepInSystem);
-        }
-      });
-    });
+  //         updateEvaluatorsRepToDb(evaluators);
 
-    // return cb(err, data.Items);
-  });
+  //         cacheNewTotalReputationToDb(evaluators, totalRepInSystem);
+  //       }
+  //     });
+  //   });
+
+  //   // return cb(err, data.Items);
+  // });
 
 };
 

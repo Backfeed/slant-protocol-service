@@ -1,5 +1,16 @@
 {
   "createevaluations": {
-    "contributionId": "879ab1b2-e21d-4b29-a77d-eaf8847aee9f"
+    "evaluations": [
+      {
+        "contributionId": "f5007bbf-390b-4efd-b804-aabc159a4e64",
+        "value": 1
+      },
+      {
+        "contributionId": "6f9545d2-aae4-4b5b-88c2-6c00335272e3",
+        "value": 1
+      }
+    ],
+    "userId": "1cc691e6-88f6-4c76-ab70-28f80805b877",
+    "biddingId": "4029b9aa-5b53-4f7f-92ab-b6d006253ca8"
   }
 }

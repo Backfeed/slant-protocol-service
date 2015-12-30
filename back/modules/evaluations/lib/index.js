@@ -10,7 +10,7 @@ var dynamoConfig = {
 };
 var dynamodbDocClient = new AWS.DynamoDB.DocumentClient(dynamoConfig);
 var tableName = 'slant-evaluations-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
-
+var createSingleEvaluation = require('../lib/createSingleEvaluation');
 var hLog = log('HELPERS');
 
 module.exports = {
@@ -35,10 +35,11 @@ function createEvaluation(event, cb) {
       "id": element.id || uuid.v4(),
       "userId": event.userId,
       "biddingId": event.biddingId,
-      "contributionId": event.contributionId,
+      "contributionId": element.contributionId,
       "value": element.value,
       "createdAt": Date.now()
     };
+    createSingleEvaluation.execute(newEvaluation);
     var dbEvaluationWrapper = {
       PutRequest: {
         Item: newEvaluation
