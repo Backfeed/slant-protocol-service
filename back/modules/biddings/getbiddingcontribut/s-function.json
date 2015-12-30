@@ -17,7 +17,7 @@
           "apiKeyRequired": true,
           "requestParameters": {},
           "requestTemplates": {
-            "application/json": "$input.json('$')"
+            "application/json": "{\"id\":\"$input.params('id')\" , \"userId\":\"$input.params('userId')\"}"
           },
           "responses": {
             "400": {
