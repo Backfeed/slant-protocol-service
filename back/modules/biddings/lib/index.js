@@ -83,8 +83,9 @@ function getBiddingContributions(event, cb) {
           var myEval = _.find(evaluations, 'contributionId', element.id);
           if (myEval) {
             element.userContext = {};
-            element.userContext.id = myEval.id;
-            element.userContext.value = myEval.value;
+            element.userContext.evaluation = {};
+            element.userContext.evaluation.id = myEval.id;
+            element.userContext.evaluation.value = myEval.value;
           }
         });
       }
