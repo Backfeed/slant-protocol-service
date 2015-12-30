@@ -30,8 +30,8 @@ function create(event, cb) {
 
   var newUser = {
     "id": uuid.v4(),
-    "tokens": 10,
-    "reputation": 11,
+    "tokens": event.tokens || 10,
+    "reputation": event.reputation || 11,
     "biddingCount": 0,
     "createdAt": Date.now()
   };
