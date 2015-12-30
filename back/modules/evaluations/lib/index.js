@@ -1,8 +1,9 @@
 'use strict';
 
-var _    = require('underscore');
-var AWS  = require('aws-sdk');
-var uuid = require('node-uuid');
+var _     = require('underscore');
+var AWS   = require('aws-sdk');
+var uuid  = require('node-uuid');
+var async = require('async');
 
 var dynamoConfig = {
   sessionToken:    process.env.AWS_SESSION_TOKEN,
@@ -30,7 +31,7 @@ function createEvaluation(event, cb) {
   };
 
   var submittedEvaluations = [];
-  event.evaluations.forEach(function(element) {
+  async.each(event.evaluations, function(element, callback) {
     var newEvaluation = {
       "id": element.id || uuid.v4(),
       "userId": event.userId,
@@ -39,18 +40,25 @@ function createEvaluation(event, cb) {
       "value": element.value,
       "createdAt": Date.now()
     };
-    createSingleEvaluation.execute(newEvaluation);
+
+
+
     var dbEvaluationWrapper = {
       PutRequest: {
         Item: newEvaluation
       }
     };
     submittedEvaluations.push(dbEvaluationWrapper);
+
+    createSingleEvaluation.execute(newEvaluation, callback);
+  }, function(err) {
+    console.log('iterate done');
+    params.RequestItems[tableName] = submittedEvaluations;
+    dynamodbDocClient.batchWrite(params, function(err, data) {
+      return cb(err, {});
+    });
   });
-  params.RequestItems[tableName] = submittedEvaluations;
-  dynamodbDocClient.batchWrite(params, function(err, data) {
-    return cb(err, {});
-  });
+
 }
 
 function getEvaluation(event, cb) {
