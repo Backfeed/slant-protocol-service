@@ -29,6 +29,7 @@ var dynamodbDocClient = new AWS.DynamoDB.DocumentClient(dynamoConfig);
 var tableName = 'slant-evaluations-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 var usersTableName = 'slant-users-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 var contributionsTableName = 'slant-contributions-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
+var cachingTableName = 'slant-caching-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 
 var log = log('CREATE SINGLE');
 
@@ -103,16 +104,14 @@ module.exports.execute = function(event, cb) {
       totalContributionRep = calcTotalContributionRep(evaluators);
       log("totalContributionRep", totalContributionRep);
 
-      lambda.invoke({
-        FunctionName: 'slant-gettotalrep'
-      }, function(error, data) {
+      getTotalRep(function(error, data) {
         if (error) {
           log('slant-gettotalrep', 'error', error);
           return;
         }
-        if(data.Payload){
+        if(data){
 
-          totalRepInSystem = parseFloat(data.Payload);
+          totalRepInSystem = parseFloat(data);
           log('totalRepInSystem', totalRepInSystem);
 
           evaluators = updateEvaluatorsRep(evaluators, stake, currentUserRep, totalRepInSystem);
@@ -240,7 +239,7 @@ function updateEvaluatorsRepToDb(evaluators) {
     if (err) {
       return log("updateEvaluatorRepToDb: err", err);
     }
-    log("updateEvaluatorRepToDb", data);
+    return log("updateEvaluatorRepToDb", data);
   });
 }
 
@@ -350,5 +349,38 @@ function addCurrentUserIdToContributionVotersArray(contributionId, userId, value
       return log("addCurrentUserIdToContributionVotersArray: err", err);
     }
     log("addCurrentUserIdToContributionVotersArray", data);
+  });
+}
+
+function cacheTotalRep(event, cb) {
+
+  var params = {
+    TableName: cachingTableName,
+    Key: { type: "totalRepInSystem" },
+    UpdateExpression: 'set #val = :v',
+    ExpressionAttributeNames: { '#val' : 'theValue' },
+    ExpressionAttributeValues: { ':v' : event.reputation },
+    ReturnValues: 'ALL_NEW'
+  };
+
+  return dynamodbDocClient.update(params, function(err, data) {
+    log('cacheUsersReputation: CB: ', data);
+    return cb(err, data);
+  });
+}
+
+function getTotalRep(cb) {
+
+  var params = {
+    TableName : cachingTableName,
+    Key: { type: "totalRepInSystem" }
+  };
+
+  return dynamodbDocClient.get(params, function(err, data) {
+    if (_.isEmpty(data)) {
+      err = '404:Resource not found.';
+      return cb(err);
+    }
+    return cb(err, data.Item.theValue);
   });
 }
