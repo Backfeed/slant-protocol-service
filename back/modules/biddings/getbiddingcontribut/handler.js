@@ -27,33 +27,7 @@ var dynamodbDocClient = new AWS.DynamoDB.DocumentClient(dynamoConfig);
 module.exports.handler = function(event, context) {
   console.log('event', event);
 
-  lib.getContributions(event, function(error, contributions) {
-
-    console.log('contributions', contributions);
-
-    // TODO :: set users rep in same moment, not static!
-    // var contributionsWithScore = _.map(contributions, function(contribution) {
-
-    //   var paramsForQueringEvaluators = getParamsForQueringEvaluators(contribution.positiveEvaluators);
-
-    //   dynamodbDocClient.batchGet(paramsForQueringEvaluators, function(err, data) {
-    //     if (err) {
-    //       console.log('contribution', contribution.id, 'err: ', err);
-    //       return;
-    //     }
-
-    //     var evaluators = data.Responses[usersTableName];
-    //     var score = _.reduce(evaluators, function(memo, evaluator) {
-    //       memo + evaluator.reputation;
-    //     });
-
-    //     console.log('contribution', contribution.id, 'score: ', score);
-    //     // contributions.score =  score;
-    //   });
-
-    // });
-
-    console.log('contributions', contributions);
+  lib.getBiddingContributions(event, function(error, contributions) {
     return context.done(error, contributions);
   });
 };
