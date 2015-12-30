@@ -63,6 +63,10 @@ function getEvaluation(event, cb) {
   };
 
   return dynamodbDocClient.get(params, function(err, data) {
+    if (_.isEmpty(data)) {
+      err = '404:Resource not found.';
+      return cb(err);
+    }
     return cb(err, data.Item);
   });
 }
