@@ -65,6 +65,38 @@ function getBidding(event, cb) {
 
 function getBiddingContributions(event, cb) {
 
+  var contributions;
+  var evaluations;
+  async.waterfall([
+    function(callback) {
+      getContributions(event, callback);
+    },
+    function(result, callback) {
+      contributions = result;
+      getUserEvaluations(event, callback);
+    },
+    function(result, callback) {
+      evaluations = result.items;
+      if (contributions && event.userId)
+      {
+        _.each(contributions, function(element) {
+          var myEval = _.find(evaluations, 'contributionId', element.id);
+          if (myEval) {
+            element.userContext = {};
+            element.userContext.id = myEval.id;
+            element.userContext.value = myEval.value;
+          }
+        });
+      }
+      callback(null, contributions);
+    }
+  ], function (err, result) {
+    return cb(null, result);
+  });
+}
+
+function getContributions(event, cb) {
+
   var params = {
     TableName : contributionsTableName,
     IndexName: 'biddingId-index',
@@ -74,20 +106,9 @@ function getBiddingContributions(event, cb) {
     }
   };
   dynamodbDocClient.query(params, function(err, data) {
-    if (data.Items && event.userId)
-    {
-      _.each(data.Items, function(element) {
-        if (element.userId === event.userId) {
-          element.userContext = {};
-          element.userContext.id = 1;
-          element.userContext.value = 1;
-        }
-      });
-    }
     return cb(err, data.Items);
   });
 }
-
 function getBiddingUsers(event, cb) {
 
   var response = [];
