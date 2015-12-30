@@ -20,7 +20,7 @@ module.exports = {
   getContributionUsers: getContributionUsers,
   deleteContribution: deleteContribution,
   log: log
-}
+};
 
 function createContribution(event, cb) {
 

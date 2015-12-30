@@ -17,7 +17,7 @@
           "apiKeyRequired": true,
           "requestParameters": {},
           "requestTemplates": {
-            "application/json": "{\"userId\":\"$input.params('userId')\",\"biddingId\":\"$input.params('biddingId')\",\"evaluations\":\"$input.params('evaluations')\"}"
+            "application/json": "$input.json('$')"
           },
           "responses": {
             "400": {
