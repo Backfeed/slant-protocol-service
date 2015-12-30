@@ -54,7 +54,7 @@ module.exports.handler = function(event, context) {
     // });
 
     console.log('contributions', contributions);
-    return context.done(error, 'contributions');
+    return context.done(error, contributions);
   });
 };
 
