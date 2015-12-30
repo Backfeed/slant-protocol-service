@@ -27,7 +27,6 @@
   "custom": {},
   "plugins": [
     {
-      "path": "serverless-serve"
     }
   ]
 }
