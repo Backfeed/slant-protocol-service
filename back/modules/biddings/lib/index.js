@@ -151,31 +151,45 @@ function getUserEvaluations(event, cb) {
 function endBidding(event, cb) {
 
   // Protocol calculates the winning contribution
-  var winningContribution = getWinningContribution('694d7f56-12db-450c-90aa-a278e38e96f0');
+  getContributions(event, function(err, contributions) {
+    if (err) {
+      console.log('endBidding', err);
+      return cb(err);
+    }
 
-  // the callback updates the DB
-  var params = {
-    TableName: tableName,
-    Key: {
-      id: event.id
-    },
-    UpdateExpression: 'set #sta = :s, #win = :w, #end = :e',
-    ExpressionAttributeNames: {
-      '#sta' : 'status',
-      '#win' : 'winningContribution',
-      '#end' : 'endedAt'
-    },
-    ExpressionAttributeValues: {
-      ':s' : 'Completed',
-      ':w' : {},
-      ':e' : Date.now()
-    },
-    ReturnValues: 'ALL_NEW'
-  };
+    console.log('contributions', contributions);
 
-  return dynamodbDocClient.update(params, function(err, data) {
-    return cb(err, data.Attributes);
+    var winningContribution = _.max(contributions, function(contribution) {
+      return contribution.score;
+    });
+
+    console.log('winningContribution', winningContribution);
+
+    // the callback updates the DB
+    var params = {
+      TableName: tableName,
+      Key: { id: event.id },
+      UpdateExpression: 'set #sta = :s, #win = :w, #end = :e',
+      ExpressionAttributeNames: {
+        '#sta' : 'status',
+        '#win' : 'winningContribution',
+        '#end' : 'endedAt'
+      },
+      ExpressionAttributeValues: {
+        ':s' : 'Completed',
+        ':w' : winningContribution.id,
+        ':e' : Date.now()
+      },
+      ReturnValues: 'ALL_NEW'
+    };
+
+    return dynamodbDocClient.update(params, function(err, data) {
+      console.log('DB update CB: data', data);
+      return cb(err, data.Attributes);
+    });
+    
   });
+
 };
 
 function deleteBidding(event, cb) {
