@@ -10,10 +10,12 @@ var dynamoConfig = {
 
 var dynamodbDocClient = new AWS.DynamoDB.DocumentClient(dynamoConfig);
 var cachingTableName = 'slant-caching-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
+var usersTableName = 'slant-users-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 var hLog = log('HELPERS');
 
 
 module.exports = {
+  cacheTotalUsersRep: cacheTotalUsersRep,
   cacheTotalRep: cacheTotalRep,
   getTotalRep: getTotalRep,
   log: log
@@ -50,6 +52,30 @@ function getTotalRep(event, cb) {
     }
     return cb(err, data.Item.theValue);
   });
+}
+
+function cacheTotalUsersRep(event, cb) {
+  // get all users rep
+  log('foo')
+
+  var paramsForQueringUsers = {
+    TableName: usersTableName,
+    ProjectionExpression:"reputation",
+    ConsistentRead: true,
+    ReturnConsumedCapacity: "TOTAL"
+  };
+  
+  dynamodbDocClient.query(paramsForQueringUsers, function(err, data) {
+    if(err) {
+      log('cacheTotalUsersRep: err: ', err);
+      return cb(err);
+    }
+    var users = data.Items;
+    log('users', users);
+    return cb(null, users);
+  });
+  // sum
+  // cache
 }
 
 function log(prefix) {
