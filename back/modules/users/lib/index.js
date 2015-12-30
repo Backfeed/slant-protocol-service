@@ -73,6 +73,10 @@ function getUserEvaluations(event, cb) {
     }
   };
   dynamodbDocClient.query(params, function(err, data) {
+    if (_.isEmpty(data.Items)) {
+      err = '404:Resource not found.';
+      return cb(err);
+    }
     return cb(err, data.Items);
   });
 }
@@ -88,6 +92,10 @@ function getUserContributions(event, cb) {
     }
   };
   dynamodbDocClient.query(params, function(err, data) {
+    if (_.isEmpty(data.Items)) {
+      err = '404:Resource not found.';
+      return cb(err);
+    }
     return cb(err, data.Items);
   });
 }
