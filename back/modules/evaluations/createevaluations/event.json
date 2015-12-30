@@ -2,15 +2,15 @@
   "createevaluations": {
     "evaluations": [
       {
-        "contributionId": "f5007bbf-390b-4efd-b804-aabc159a4e64",
+        "contributionId": "4dac01bf-ab95-4313-b09c-a996bada46eb",
         "value": 1
       },
       {
-        "contributionId": "6f9545d2-aae4-4b5b-88c2-6c00335272e3",
+        "contributionId": "0d296b0f-51cc-4884-965e-951f9a14562d",
         "value": 1
       }
     ],
     "userId": "1cc691e6-88f6-4c76-ab70-28f80805b877",
-    "biddingId": "4029b9aa-5b53-4f7f-92ab-b6d006253ca8"
+    "biddingId": "37d8ae07-f681-472d-9405-d19ddc2ab742"
   }
 }

@@ -49,7 +49,7 @@ module.exports.execute = function(event, context) {
   var totalContributionRep;
   var totalContributionPositiveRep;
 
-  addCurrentUserIdToContributionVotersArray(event.contributionId, event.userId, event.value);
+  // addCurrentUserIdToContributionVotersArray(event.contributionId, event.userId, event.value);
 
   var paramsForQueringEvaluations = {
     TableName : tableName,
@@ -96,6 +96,9 @@ module.exports.execute = function(event, context) {
       log('currentUser: ', currentUser);
 
       currentUserRep = currentUser.reputation;
+
+      if (event.value)
+        addCurrentUserRepToContributionScore(event.contributionId, currentUserRep);
 
       totalContributionRep = calcTotalContributionRep(evaluators);
       log("totalContributionRep", totalContributionRep);
@@ -268,6 +271,27 @@ function log(prefix) {
     console.log('\n');
   };
 
+}
+
+function addCurrentUserRepToContributionScore(contributionId, currentUserRep) {
+  var params = {
+    TableName: contributionsTableName,
+    AttributeUpdates: {
+      score: {
+        Action: 'ADD',
+        Value: currentUserRep
+      }
+    },
+    Key: { id: contributionId },
+    ReturnValues: 'ALL_NEW'
+  };
+
+  return dynamodbDocClient.update(params, function(err, data) {
+    if (err) {
+      return log("addCurrentUserRepToContribution: err", err);
+    }
+    log("addCurrentUserRepToContribution", data);
+  });
 }
 
 function addCurrentUserIdToContributionVotersArray(contributionId, userId, value) {
