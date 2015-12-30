@@ -30,9 +30,6 @@
                 "application/json": "#set($inputRoot = $input.path('$'))\n{\"error\": \"$inputRoot.errorMessage.substring(4)\"}"
               }
             },
-            "400": {
-              "statusCode": "400"
-            },
             "default": {
               "statusCode": "200",
               "responseParameters": {},

@@ -21,7 +21,12 @@
           },
           "responses": {
             "400": {
-              "statusCode": "400"
+              "statusCode": "400",
+              "selectionPattern": ".+",
+              "responseParameters": {},
+              "responseTemplates": {
+                "application/json": "#set($inputRoot = $input.path('$'))\n{\"errorMessage\": \"$inputRoot.errorMessage\"}"
+              }
             },
             "default": {
               "statusCode": "200",
