@@ -90,7 +90,7 @@ module.exports.execute = function(event, cb) {
       log('evaluators after adding vote value: ', evaluators);
 
       totalVoteRep = getTotalEvaluatorsWhoVotedSameRep(evaluators, event.value);
-      log('totalVoteRep', totalVoteRep);  
+      log('totalVoteRep', totalVoteRep);
 
       currentUser = getCurrentUserFromEvaluators(evaluators, event.userId);
       log('currentUser: ', currentUser);
@@ -165,7 +165,7 @@ function getParamsForQueringEvaluators(evaluations) {
 }
 
 function calcTotalContributionRep(evaluators) {
-  return _.reduce(evaluators, function(memo, evaluator){ 
+  return _.reduce(evaluators, function(memo, evaluator){
     return memo + evaluator.reputation;
   }, 0);
 }
@@ -194,7 +194,7 @@ function addVoteValueToEvaluators(evaluators, evaluations) {
     evaluator.value = _.find(evaluations, function(evaluation) {
       return evaluation.userId === evaluator.id;
     }).value;
-    
+
     return evaluator;
   });
 }
@@ -220,7 +220,28 @@ function getCurrentUserFromEvaluators(evaluators, currentUserId) {
 }
 
 function updateEvaluatorsRepToDb(evaluators) {
-  return _.each(evaluators, updateEvaluatorRepToDb);
+  var params = {
+    TableName: usersTableName,
+    RequestItems: {},
+    ReturnConsumedCapacity: 'NONE',
+    ReturnItemCollectionMetrics: 'NONE'
+  };
+  var submittedEvaluators = [];
+  _.each(evaluators, function(element) {
+    var dbEvaluatorsWrapper = {
+      PutRequest: {
+        Item: element
+      }
+    };
+    submittedEvaluators.push(dbEvaluatorsWrapper);
+  });
+  params.RequestItems[tableName] = submittedEvaluators;
+  dynamodbDocClient.batchWrite(params, function(err, data) {
+    if (err) {
+      return log("updateEvaluatorRepToDb: err", err);
+    }
+    log("updateEvaluatorRepToDb", data);
+  });
 }
 
 function updateEvaluatorRepToDb(evaluator) {
