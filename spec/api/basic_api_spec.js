@@ -10,22 +10,45 @@ var userId = '701676b1-7866-44ef-a02f-2c2e7f40a30a';
 var params =  {
     headers: { 'x-api-key': process.env.X_API_KEY }
 };
+describe("Slant Protocol API", function() {
 
-describe("HTTP assertions", function () {
-    it("should make HTTP assertions easy", function () {
-        var response = chakram.get(URL + '/users/' + userId, params);
-        expect(response).to.have.status(200);
-        expect(response).to.have.header("content-type", "application/json");
-        expect(response).not.to.be.encoded.with.gzip;
-        //expect(response).to.comprise.of.json({
-        //    args: {
-        //        "id": "701676b1-7866-44ef-a02f-2c2e7f40a30a",
-        //        "createdAt": 1451419694531,
-        //        "tokens": 10,
-        //        "biddingCount": 0,
-        //        "reputation": 11
-        //    }
-        //});
-        return chakram.wait();
+    var createUserPost, userGET, nonUserGET, initialData;
+
+    before("Initialize things for the tests", function () {
+        initialData = {
+            tokens: 2,
+            reputation: 1
+        };
+        createUserPost = chakram.post(URL + '/users/', initialData, params);
+        userGET = chakram.get(URL + '/users/' + userId, params);
+        nonUserGET = chakram.get(URL + '/users/1', params);
+    });
+
+    it("should return 201 on success", function () {
+        return expect(createUserPost).to.have.status(201);
+    });
+
+    it("should return 200 when finding a user", function () {
+        return expect(userGET).to.have.status(200);
+    });
+
+    it("should return 404 when not finding a user", function () {
+        return expect(nonUserGET).to.have.status(404);
+    });
+
+    describe("play with some users data", function () {
+
+        var userData;
+
+        before("Initialize things for the tests", function () {
+            return createUserPost.then(function(respObj) {
+                userData = respObj.body;
+            });
+        });
+
+        it("should return r", function () {
+            expect(userData.reputation).to.equal(1);
+            return chakram.wait();
+        });
     });
 });
