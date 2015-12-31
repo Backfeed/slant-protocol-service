@@ -54,72 +54,70 @@ module.exports.execute = function(event, cb) {
   // addCurrentUserIdToContributionVotersArray(event.contributionId, event.userId, event.value);
 
   async.waterfall([
-    function(callback) {
-      getEvaluations(event.contributionId, callback);
+
+    function(waterfallCB) {
+
+      async.parallel({
+        totalRepInSystem: function(parallelCB) {
+          lambda.invoke({
+            FunctionName: 'slant-gettotalrep'
+          }, function(error, data) {
+            parallelCB(error, parseFloat(data.Payload));
+          });
+        },
+        evaluations: function(parallelCB) {
+          getEvaluations(event.contributionId, parallelCB);
+        }
+      },
+        function(err, results) {
+          totalRepInSystem = results.totalRepInSystem;
+          formerEvaluations = results.evaluations;
+          formerEvaluations.push(event);
+          evaluations = formerEvaluations;
+          log('evaluations', evaluations);
+          getEvaluators(evaluations, waterfallCB);
+        }
+      );
+
     },
 
-    function(result, callback) {
-      formerEvaluations = result;
-      formerEvaluations.push(event);
-      evaluations = formerEvaluations;
-      log('evaluations', evaluations);
-      getEvaluators(evaluations, callback);
-    }, 
-
-    function(result, callback) {
+    function(result, waterfallCB) {
       evaluators = result;
-      log('evaluators', evaluators)
+      log('evaluators', evaluators);
       immutableMap = immutableMap.set('totalEvaluatorsRepBefore', calcTotalEvaluatorsRep(evaluators));
       evaluators = addVoteValueToEvaluators(evaluators, evaluations);
       totalVoteRep = getTotalEvaluatorsWhoVotedSameRep(evaluators, event.value);
       currentUser = getCurrentUserFromEvaluators(evaluators, event.userId);
       currentUserRep = currentUser.reputation;
-
-      if (event.value) {
-        addCurrentUserRepToContributionScore(event.contributionId, currentUserRep, callback);
-      } else {
-        callback(null, 'done');
-      }
-    },
-
-    function(result, callback) {
       totalContributionRep = calcTotalContributionRep(evaluators);
       log("totalContributionRep", totalContributionRep);
-
-      lambda.invoke({
-        FunctionName: 'slant-gettotalrep'
-      }, function(error, data) {
-        callback(error, data);
-      });
-    },
-
-    function(result, callback) {
-      totalRepInSystem = parseFloat(result.Payload);
-      log('totalRepInSystem', totalRepInSystem);
-      
       evaluators = updateEvaluatorsRep(evaluators, stake, currentUserRep, totalRepInSystem);
-      // log('evaluators with updated rep', evaluators);
-
       evaluators = updateEvaluatorsRepForSameVoters(evaluators, stake, currentUserRep, totalRepInSystem, totalContributionRep, totalVoteRep, event.value, event.userId);
-      // log('evaluators with updated rep for same voters', evaluators);
-      
       currentUser.reputation = burnRepForCurrentUser(stake, currentUserRep, totalContributionRep, totalVoteRep, totalRepInSystem);
-      
-      updateEvaluatorsRepToDb(evaluators, callback);
-    },
 
-    function(result, callback) {
-      cacheNewTotalReputationToDb(evaluators, totalRepInSystem, callback);
+      async.parallel({
+        updateEvaluatorsRepToDb: function(parallelCB) {
+          updateEvaluatorsRepToDb(evaluators, parallelCB);
+        },
+        cacheNewTotalRepToDb: function(parallelCB) {
+          cacheNewTotalReputationToDb(evaluators, totalRepInSystem, parallelCB);
+        }
+      },
+        function(err, results) {
+          if (err) { log('err', err); } 
+          else {     log('results', results); }
+
+          var endTime = new Date().getTime();
+          log('total time', endTime - startTime);
+          return cb(err, 'done');
+        }
+      );
+      
     }
 
-  ], function (err, result) {
-    log('err', err, 'result', result);
-    var endTime = new Date().getTime();
-    log('total time', endTime - startTime);
-    return cb(null, result);
-  });
+  ]);
 
-};
+}
 
 function calcTotalContributionRep(evaluators) {
   return _.reduce(evaluators, function(memo, evaluator){ 
