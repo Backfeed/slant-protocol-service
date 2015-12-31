@@ -221,6 +221,9 @@ function getWinningContribution(contributionId) {
 function log(prefix) {
 
   return function() {
+    if (process.env.SERVERLESS_STAGE === 'development')
+      return;
+    
     console.log('***************** ' + 'BIDDINGS: ' + prefix + ' *******************');
     _.each(arguments, function(msg, i) { console.log(msg); });
     console.log('***************** /' + 'BIDDINGS: ' + prefix + ' *******************');

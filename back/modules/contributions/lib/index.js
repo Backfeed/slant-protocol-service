@@ -94,6 +94,9 @@ function deleteContribution(event, cb) {
 function log(prefix) {
 
   return function() {
+    if (process.env.SERVERLESS_STAGE === 'development')
+      return;
+    
     console.log('***************** ' + 'CONTRIBUTIONS: ' + prefix + ' *******************');
     _.each(arguments, function(msg, i) { console.log(msg); });
     console.log('***************** /' + 'CONTRIBUTIONS: ' + prefix + ' *******************');

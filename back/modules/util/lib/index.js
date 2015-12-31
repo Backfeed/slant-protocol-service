@@ -81,6 +81,9 @@ function cacheTotalUsersRep(event, cb) {
 function log(prefix) {
 
   return function() {
+    if (process.env.SERVERLESS_STAGE === 'development')
+      return;
+
     console.log('***************** ' + 'USERS: ' + prefix + ' *******************');
     _.each(arguments, function(msg, i) { console.log(msg); });
     console.log('***************** /' + 'USERS: ' + prefix + ' *******************');

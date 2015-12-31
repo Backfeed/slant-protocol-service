@@ -94,6 +94,9 @@ function deleteEvaluation(event, cb) {
 
 function log(prefix) {
 
+  if (process.env.SERVERLESS_STAGE === 'development')
+    return;
+
   return function() {
     console.log('***************** ' + 'EVALUATIONS: ' + prefix + ' *******************');
     _.each(arguments, function(msg, i) { console.log(msg); });
