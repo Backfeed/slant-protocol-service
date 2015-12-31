@@ -307,9 +307,7 @@ function getEvaluators(evaluations, cb) {
     return { id: evaluation.userId };
   });
 
-  Keys = _.uniq(Keys);
-
-  var Keys = _.uniq(Keys, function(item, key, a) { 
+  Keys = _.uniq(Keys, function(item, key, a) { 
     return item.id;
   });
 
