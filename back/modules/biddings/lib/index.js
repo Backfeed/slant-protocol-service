@@ -19,7 +19,7 @@ var hLog = log('HELPERS');
 
 module.exports = {
   createBidding: createBidding,
-  getBidding: getBidding,
+  getBiddingWithWinningTitle: getBiddingWithWinningTitle,
   getBiddingContributions: getBiddingContributions,
   getBiddingUsers: getBiddingUsers,
   getBiddingUserEvaluations: getBiddingUserEvaluations,
@@ -47,7 +47,6 @@ function createBidding(event, cb) {
 }
 
 function getBidding(event, cb) {
-
   var params = {
     TableName : tableName,
     Key: {
@@ -61,6 +60,102 @@ function getBidding(event, cb) {
       return cb(err);
     }
     return cb(err, data.Item);
+  });
+}
+
+function getBiddingWithWinningTitle(event, cb) {
+  async.parallel({
+    bidding: function(parallelCB) {
+      getBidding(event, parallelCB);
+    },
+    winningTitle: function(parallelCB) {
+      getBiddingWinningTitle(event.id, parallelCB);
+    }
+  },
+    function(err, results) {
+      var bidding = results.bidding;
+      bidding.winningTitleId = results.winningTitle;
+      cb(err, bidding);
+    }
+  );
+
+}
+
+function getBiddingWinningTitle(biddingId, cb) {
+  var evaluations;
+  async.waterfall([
+    function(callback) {
+      getPositiveEvaluationsByBiddingId(biddingId, callback);
+    },
+    function(response, callback) {
+      evaluations = response;
+      getUsersByEvaluations(evaluations, callback);
+    },
+    function(response, callback) {
+      var users = response;
+      calcWinningTitle(users, evaluations, callback);
+    }
+  ], 
+    function(err, result) {
+      cb(err, result);
+    }
+  );
+}
+
+function calcWinningTitle(users, evaluations, callback) {
+  var scores = {};
+  _.each(evaluations, function(evaluation) {
+    if (!scores[evaluation.contributionId])
+      scores[evaluation.contributionId] = 0;
+
+    scores[evaluation.contributionId] += getUserRep(users, evaluation.userId);
+  });
+  var winningContributionId = _.max(_.pairs(scores), _.last)[0];
+  callback(null, winningContributionId);
+}
+
+function getUserRep(users, userId) {
+  var user = _.find(users, function(u) {
+    return u.id === userId;
+  });
+  return user.reputation;
+}
+
+function getPositiveEvaluationsByBiddingId(biddingId, callback) {
+  var params = {
+    TableName : evaluationsTableName,
+    IndexName: 'biddingId-value-index',
+    ExpressionAttributeNames: { '#v': 'value' }, // Need to do this since 'value' is a resevred dynamoDB word
+    KeyConditionExpression: 'biddingId = :bkey and #v = :v',
+    ExpressionAttributeValues: {
+      ':bkey': biddingId,
+      ':v': 1
+    }
+  };
+  dynamodbDocClient.query(params, function(err, data) {
+    return callback(err, data.Items);
+  });
+}
+
+function getUsersByEvaluations(evaluations, callback) {
+  var params = {
+    RequestItems: {}
+  };
+
+  var Keys = _.map(evaluations, function(evaluation) {
+    return { id: evaluation.userId };
+  });
+
+  Keys = _.uniq(Keys, function(item, key, a) { 
+    return item.id;
+  });
+
+  params.RequestItems[usersTableName] = {
+    Keys: Keys
+  };
+
+  dynamodbDocClient.batchGet(params, function(err, data) {
+    return callback(err, data.Responses[usersTableName]);
   });
 }
 
