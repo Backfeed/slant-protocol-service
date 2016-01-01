@@ -25,9 +25,5 @@
     ]
   },
   "custom": {},
-  "plugins": [
-    {
-      "path": "serverless-serve"
-    }
-  ]
+  "plugins": []
 }
