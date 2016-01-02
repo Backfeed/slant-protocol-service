@@ -18,7 +18,7 @@ var async = require('async');
 var hLog = log('HELPERS');
 
 module.exports = {
-  create: create,
+  createUser: createUser,
   getUser: getUser,
   updateUser: updateUser,
   deleteUser: deleteUser,
@@ -27,7 +27,7 @@ module.exports = {
   log: log
 };
 
-function create(event, cb) {
+function createUser(event, cb) {
 
   var rep = event.reputation || 11;
   var tokens = event.tokens;

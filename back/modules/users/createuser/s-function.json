@@ -1,35 +1,30 @@
 {
   "functions": {
-    "create": {
+    "createuser": {
       "custom": {
         "excludePatterns": [],
         "envVars": []
       },
-      "handler": "modules/users/create/handler.handler",
+      "handler": "modules/users/createuser/handler.handler",
       "timeout": 6,
       "memorySize": 1024,
       "eventSourceArn": "",
       "endpoints": [
         {
-          "path": "users",
-          "method": "POST",
+          "path": "users/createuser",
+          "method": "GET",
           "authorizationType": "none",
-          "apiKeyRequired": true,
+          "apiKeyRequired": false,
           "requestParameters": {},
           "requestTemplates": {
-            "application/json": "$input.json('$')"
+            "application/json": ""
           },
           "responses": {
             "400": {
-              "statusCode": "400",
-              "selectionPattern": ".+",
-              "responseParameters": {},
-              "responseTemplates": {
-                "application/json": "#set($inputRoot = $input.path('$'))\n{\"errorMessage\": \"$inputRoot.errorMessage\"}"
-              }
+              "statusCode": "400"
             },
             "default": {
-              "statusCode": "201",
+              "statusCode": "200",
               "responseParameters": {},
               "responseModels": {},
               "responseTemplates": {
