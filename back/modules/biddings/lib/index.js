@@ -95,7 +95,7 @@ function getBiddingWinningTitle(biddingId, cb) {
       var users = response;
       calcWinningTitle(users, evaluations, callback);
     }
-  ], 
+  ],
     function(err, result) {
       cb(err, result);
     }
@@ -146,7 +146,7 @@ function getUsersByEvaluations(evaluations, callback) {
     return { id: evaluation.userId };
   });
 
-  Keys = _.uniq(Keys, function(item, key, a) { 
+  Keys = _.uniq(Keys, function(item, key, a) {
     return item.id;
   });
 
@@ -285,7 +285,7 @@ function endBidding(event, cb) {
 
   });
 
-};
+}
 
 function deleteBidding(event, cb) {
 
@@ -293,12 +293,17 @@ function deleteBidding(event, cb) {
     TableName : tableName,
     Key: {
       id: event.id
-    }
+    },
+    ReturnValues: 'ALL_OLD'
   };
   return dynamodbDocClient.delete(params, function(err, data) {
-    return cb(err, params.Key);
+    if (_.isEmpty(data)) {
+      err = '404:Resource not found.';
+      return cb(err);
+    }
+    return cb(err, data);
   });
-};
+}
 
 function getWinningContribution(contributionId) {
   var params = {
@@ -318,7 +323,7 @@ function log(prefix) {
   return function() {
     if (process.env.SERVERLESS_STAGE === 'development')
       return;
-    
+
     console.log('***************** ' + 'BIDDINGS: ' + prefix + ' *******************');
     _.each(arguments, function(msg, i) { console.log(msg); });
     console.log('***************** /' + 'BIDDINGS: ' + prefix + ' *******************');
