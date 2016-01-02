@@ -67,6 +67,17 @@ module.exports.execute = function(event, cb) {
         function(err, results) {
           totalRepInSystem = results.totalRepInSystem;
           formerEvaluations = results.evaluations;
+
+          var currentUserFormerEvaluation = _.findWhere(formerEvaluations, { userId: event.userId });
+
+          if (!!currentUserFormerEvaluation) {
+            if (currentUserFormerEvaluation.value === event.value)
+              return cb(new Error('404: bad request. evalaution with same value exists'));
+            log('currentUser already evaluated this contribution, removing his vote');
+            formerEvaluations = _.reject(formerEvaluations, function(e) {
+              return e.userId === event.userId;
+            });
+          }
           formerEvaluations.push(event);
           evaluations = formerEvaluations;
           log('evaluations', evaluations);
