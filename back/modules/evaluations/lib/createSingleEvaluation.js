@@ -30,6 +30,8 @@ var tableName = 'slant-evaluations-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 var usersTableName = 'slant-users-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 var contributionsTableName = 'slant-contributions-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 
+var cachingTableName = 'slant-caching-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
+
 var log = log('CREATE SINGLE');
 
 
@@ -49,9 +51,6 @@ module.exports.execute = function(event, cb) {
   var totalVoteRep;
   var totalRepInSystem;
   var totalContributionRep;
-  var totalContributionPositiveRep;
-
-  // addCurrentUserIdToContributionVotersArray(event.contributionId, event.userId, event.value);
 
   async.waterfall([
 
@@ -59,11 +58,7 @@ module.exports.execute = function(event, cb) {
 
       async.parallel({
         totalRepInSystem: function(parallelCB) {
-          lambda.invoke({
-            FunctionName: 'slant-gettotalrep'
-          }, function(error, data) {
-            parallelCB(error, parseFloat(data.Payload));
-          });
+          getTotalRep(parallelCB);
         },
         evaluations: function(parallelCB) {
           getEvaluations(event.contributionId, parallelCB);
@@ -100,7 +95,7 @@ module.exports.execute = function(event, cb) {
           updateEvaluatorsRepToDb(evaluators, parallelCB);
         },
         cacheNewTotalRepToDb: function(parallelCB) {
-          cacheNewTotalReputationToDb(evaluators, totalRepInSystem, parallelCB);
+          cacheNewTotalReputationToDb(evaluators, parallelCB);
         }
       },
         function(err, results) {
@@ -203,23 +198,23 @@ function calcTotalEvaluatorsRep(evaluators) {
   }, 0);
 }
 
-function cacheNewTotalReputationToDb(evaluators, totalRepInSystem, callback) {
+function cacheNewTotalReputationToDb(evaluators, callback) {
   var before = immutableMap.get('totalEvaluatorsRepBefore');
   var after = calcTotalEvaluatorsRep(evaluators);
   var diff = after - before;
-  var newTotalRepInSystem = totalRepInSystem + diff;
   log('total evaluators rep: before', before, 'after', after, 'diff', diff);
-  log('totalRepInSystemBefore', totalRepInSystem, 'newTotalRepInSystem', newTotalRepInSystem);
-  lambda.invoke({
-    FunctionName: 'slant-cachetotalrep',
-    Payload: JSON.stringify({ reputation: newTotalRepInSystem })
-  }, function(error, data) {
-    if (error) {
-      log('cacheNewTotalReputationToDb', 'error', error);
-      return callback(error);
-    }
-    log('cacheNewTotalReputationToDb', data.Payload);
-    return callback(null, data.Payload);
+  
+  var params = {
+    TableName: cachingTableName,
+    Key: { type: "totalRepInSystem" },
+    UpdateExpression: 'set #val = #val + :v',
+    ExpressionAttributeNames: { '#val' : 'theValue' },
+    ExpressionAttributeValues: { ':v' : diff },
+    ReturnValues: 'ALL_NEW'
+  };
+
+  return dynamodbDocClient.update(params, function(err, data) {
+    return callback(err, data);
   });
 }
 
@@ -232,55 +227,6 @@ function log(prefix) {
     console.log('\n');
   };
 
-}
-
-function addCurrentUserRepToContributionScore(contributionId, currentUserRep, callback) {
-  var params = {
-    TableName: contributionsTableName,
-    AttributeUpdates: {
-      score: {
-        Action: 'ADD',
-        Value: currentUserRep
-      }
-    },
-    Key: { id: contributionId },
-    ReturnValues: 'ALL_NEW'
-  };
-
-  return dynamodbDocClient.update(params, function(err, data) {
-    callback(err, data);
-  });
-}
-
-function addCurrentUserIdToContributionVotersArray(contributionId, userId, value) {
-  var params = {
-    TableName: contributionsTableName,
-    AttributeUpdates: {},
-    Key: { id: contributionId },
-    ReturnValues: 'ALL_NEW'
-  };
-
-  // store id here
-  var columnName = value === 1 ? 'positiveEvaluators' : 'negativeEvaluators';
-  params.AttributeUpdates[columnName] = {
-    Action: 'ADD',
-    Value: [userId]
-  };
-
-  // remove id here in case user voted before
-  // TODO :: make it work
-  // var otherColumnName = columnName === 'positiveEvaluators' ? 'negativeEvaluators' : 'positiveEvaluators';
-  // params.AttributeUpdates[otherColumnName] = {
-  //   Action: 'DELETE',
-  //   Value: [userId]
-  // };
-
-  return dynamodbDocClient.update(params, function(err, data) {
-    if (err) {
-      return log("addCurrentUserIdToContributionVotersArray: err", err);
-    }
-    log("addCurrentUserIdToContributionVotersArray", data);
-  });
 }
 
 function getEvaluations(contributionId, cb) {
@@ -316,5 +262,22 @@ function getEvaluators(evaluations, cb) {
   dynamodbDocClient.batchGet(params, function(err, data) {
     log('Keys', Keys)
     return cb(err, data.Responses[usersTableName]);
+  });
+}
+
+
+function getTotalRep(callback) {
+
+  var params = {
+    TableName : cachingTableName,
+    Key: { type: "totalRepInSystem" }
+  };
+
+  return dynamodbDocClient.get(params, function(err, data) {
+    if (_.isEmpty(data)) {
+      err = '404:Resource not found.';
+      return callback(err);
+    }
+    return callback(err, data.Item.theValue);
   });
 }
