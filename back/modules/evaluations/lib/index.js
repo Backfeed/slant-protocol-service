@@ -31,8 +31,10 @@ function createEvaluation(event, cb) {
   };
 
   var submittedEvaluations = [];
+  var submittedEvaluationsIds = [];
+  var newEvaluation;
   async.each(event.evaluations, function(element, callback) {
-    var newEvaluation = {
+    newEvaluation = {
       "id": element.id || uuid.v4(),
       "userId": event.userId,
       "biddingId": event.biddingId,
@@ -41,21 +43,21 @@ function createEvaluation(event, cb) {
       "createdAt": Date.now()
     };
 
-
-
     var dbEvaluationWrapper = {
       PutRequest: {
         Item: newEvaluation
       }
     };
-    submittedEvaluations.push(dbEvaluationWrapper);
 
+    submittedEvaluations.push(dbEvaluationWrapper);
+    submittedEvaluationsIds.push(newEvaluation.id);
     createSingleEvaluation.execute(newEvaluation, callback);
+
   }, function(err) {
     console.log('iterate done');
     params.RequestItems[tableName] = submittedEvaluations;
     dynamodbDocClient.batchWrite(params, function(err, data) {
-      return cb(err, {});
+      return cb(err, submittedEvaluationsIds);
     });
   });
 
