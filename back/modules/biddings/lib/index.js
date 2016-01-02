@@ -203,6 +203,10 @@ function getContributions(event, cb) {
     }
   };
   dynamodbDocClient.query(params, function(err, data) {
+    if (_.isEmpty(data)) {
+      err = '404:Resource not found.';
+      return cb(err);
+    }
     return cb(err, data.Items);
   });
 }
@@ -220,6 +224,10 @@ function getBiddingUserEvaluations(event, cb) {
       getUserEvaluations(event, callback);
     }
   ], function (err, result) {
+    if (_.isEmpty(result)) {
+      err = '404:Resource not found.';
+      return cb(err);
+    }
     return cb(null, result.items);
   });
 }
@@ -236,6 +244,10 @@ function getUserEvaluations(event, cb) {
     }
   };
   dynamodbDocClient.query(params, function(err, data) {
+    if (_.isEmpty(data)) {
+      err = '404:Resource not found.';
+      return cb(err);
+    }
     return cb(null, {
       'err': err,
       'items': data.Items
