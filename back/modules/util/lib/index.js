@@ -33,8 +33,7 @@ function cacheTotalRep(event, cb) {
   };
 
   return dynamodbDocClient.update(params, function(err, data) {
-    hLog('cacheUsersReputation: CB: ', data);
-    return cb(err, data);
+    return cb(err, data.Attributes.theValue);
   });
 }
 
@@ -55,8 +54,6 @@ function getTotalRep(event, cb) {
 }
 
 function cacheTotalUsersRep(event, cb) {
-  // get all users rep
-  log('foo')
 
   var paramsForQueringUsers = {
     TableName: usersTableName,
@@ -65,17 +62,11 @@ function cacheTotalUsersRep(event, cb) {
     ReturnConsumedCapacity: "TOTAL"
   };
   
-  dynamodbDocClient.query(paramsForQueringUsers, function(err, data) {
-    if(err) {
-      log('cacheTotalUsersRep: err: ', err);
-      return cb(err);
-    }
-    var users = data.Items;
-    log('users', users);
-    return cb(null, users);
+  dynamodbDocClient.scan(paramsForQueringUsers, function(err, data) {
+    if (err) return cb(err);
+    var totalRep = sumRep(data.Items);
+    cacheTotalRep({ reputation: totalRep }, cb);
   });
-  // sum
-  // cache
 }
 
 function log(prefix) {
@@ -90,4 +81,10 @@ function log(prefix) {
     console.log('\n');
   };
 
+}
+
+function sumRep(xs) {
+  return _.reduce(xs, function(memo, x) {
+    return memo + x.reputation;
+  }, 0);
 }
