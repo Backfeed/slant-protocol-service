@@ -34,6 +34,9 @@ var cachingTableName = 'slant-caching-' + process.env.SERVERLESS_DATA_MODEL_STAG
 
 var log = log('CREATE SINGLE');
 
+var stake = 0.05;
+var alpha = 0.5;
+var beta = 0.7;
 
 // Lambda Handler
 module.exports.execute = function(event, cb) {
@@ -43,7 +46,6 @@ module.exports.execute = function(event, cb) {
   log('event', event);
   var currentUser;
   var currentUserRep;
-  var stake = 0.05;
   var formerEvaluations;
   var evaluations;
   var evaluators;
@@ -72,7 +74,7 @@ module.exports.execute = function(event, cb) {
 
           if (!!currentUserFormerEvaluation) {
             if (currentUserFormerEvaluation.value === event.value)
-              return cb(new Error('404: bad request. evalaution with same value exists'));
+              return cb(new Error('400: bad request. evalaution with same value exists'));
             log('currentUser already evaluated this contribution, removing his vote');
             formerEvaluations = _.reject(formerEvaluations, function(e) {
               return e.userId === event.userId;
@@ -93,13 +95,13 @@ module.exports.execute = function(event, cb) {
       immutableMap = immutableMap.set('totalEvaluatorsRepBefore', calcTotalEvaluatorsRep(evaluators));
       evaluators = addVoteValueToEvaluators(evaluators, evaluations);
       totalVoteRep = getTotalEvaluatorsWhoVotedSameRep(evaluators, event.value);
-      currentUser = getCurrentUserFromEvaluators(evaluators, event.userId);
+      currentUser = getCurrentUserFrom(evaluators, event.userId);
       currentUserRep = currentUser.reputation;
-      totalContributionRep = calcTotalContributionRep(evaluators);
+      totalContributionRep = sumRepOf(evaluators);
       log("totalContributionRep", totalContributionRep);
-      evaluators = updateEvaluatorsRep(evaluators, stake, currentUserRep, totalRepInSystem);
-      evaluators = updateEvaluatorsRepForSameVoters(evaluators, stake, currentUserRep, totalRepInSystem, totalContributionRep, totalVoteRep, event.value, event.userId);
-      currentUser.reputation = burnRepForCurrentUser(stake, currentUserRep, totalContributionRep, totalVoteRep, totalRepInSystem);
+      evaluators = updateEvaluatorsRepForSameVoters(evaluators, currentUserRep, totalRepInSystem, totalContributionRep, totalVoteRep, event.value, event.userId);
+      evaluators = updateEvaluatorsRep(evaluators, currentUserRep, totalRepInSystem);
+      currentUser.reputation = burnRepForCurrentUser(currentUserRep, totalContributionRep, totalVoteRep, totalRepInSystem);
 
       async.parallel({
         updateEvaluatorsRepToDb: function(parallelCB) {
@@ -125,26 +127,26 @@ module.exports.execute = function(event, cb) {
 
 }
 
-function calcTotalContributionRep(evaluators) {
+function sumRepOf(evaluators) {
   return _.reduce(evaluators, function(memo, evaluator){ 
     return memo + evaluator.reputation;
   }, 0);
 }
 
-function updateEvaluatorsRep(evaluators, stake, currentUserRep, totalRepInSystem) {
+function updateEvaluatorsRep(evaluators, currentUserRep, totalRepInSystem) {
   return _.map(evaluators, function(evaluator) {
-    evaluator.reputation /= (1 - stake * currentUserRep/totalRepInSystem);
+    evaluator.reputation /= (1 - stake * Math.pow(currentUserRep/totalRepInSystem, beta));
     return evaluator;
   });
 }
 
-function updateEvaluatorsRepForSameVoters(evaluators, stake, currentUserRep, totalRepInSystem, totalContributionRep, totalVoteRep, currentEvaluationValue, currentUserId) {
+function updateEvaluatorsRepForSameVoters(evaluators, currentUserRep, totalRepInSystem, totalContributionRep, totalVoteRep, currentEvaluationValue, currentUserId) {
   return _.map(evaluators, function(evaluator) {
     if (evaluator.id === currentUserId) {
-      return evaluator;
+      evaluator.reputation = currentUserRep * (1 - stake) + currentUserRep * stake * Math.pow(totalContributionRep/totalRepInSystem, alpha) * currentUserRep / totalVoteRep;
     }
-    if ( evaluator.value === currentEvaluationValue ) {
-      evaluator.reputation += currentUserRep * stake * totalContributionRep / totalRepInSystem * evaluator.reputation / totalVoteRep;
+    else if ( evaluator.value === currentEvaluationValue ) {
+      evaluator.reputation += currentUserRep * stake * Math.pow(totalContributionRep/totalRepInSystem, alpha) * evaluator.reputation / totalVoteRep;
     }
     return evaluator;
   });
@@ -168,13 +170,13 @@ function getTotalEvaluatorsWhoVotedSameRep(evaluators, value) {
   }, 0);
 }
 
-function burnRepForCurrentUser(stake, currentUserRep, totalContributionRep, totalVoteRep, totalRepInSystem) {
+function burnRepForCurrentUser(currentUserRep, totalContributionRep, totalVoteRep, totalRepInSystem) {
   return currentUserRep * (1 - stake)
     + currentUserRep * stake * totalContributionRep / totalRepInSystem
     * currentUserRep / totalVoteRep;
 }
 
-function getCurrentUserFromEvaluators(evaluators, currentUserId) {
+function getCurrentUserFrom(evaluators, currentUserId) {
   return _.find(evaluators, function(evaluator) {
     return evaluator.id === currentUserId;
   });
@@ -271,7 +273,6 @@ function getEvaluators(evaluations, cb) {
   };
 
   dynamodbDocClient.batchGet(params, function(err, data) {
-    log('Keys', Keys)
     return cb(err, data.Responses[usersTableName]);
   });
 }
