@@ -11,9 +11,10 @@ var dynamoConfig = {
 
 var dynamodbDocClient = new AWS.DynamoDB.DocumentClient(dynamoConfig);
 var tableName = 'slant-users-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
-var usersReptableName = 'slant-caching-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
+var cachingTableName = 'slant-caching-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 var contributionsTableName = 'slant-contributions-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 var evaluationsTableName = 'slant-evaluations-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
+var async = require('async');
 var hLog = log('HELPERS');
 
 module.exports = {
@@ -28,20 +29,19 @@ module.exports = {
 
 function create(event, cb) {
 
-  var newUser = {
-    "id": uuid.v4(),
-    "tokens": event.tokens || 10,
-    "reputation": event.reputation || 11,
-    "biddingCount": 0,
-    "createdAt": Date.now()
-  };
-  var params = {
-    TableName : tableName,
-    Item: newUser
-  };
-  dynamodbDocClient.put(params, function(err, data) {
-    return cb(err, newUser);
-  });
+  var rep = event.reputation || 11;
+  var tokens = event.tokens;
+
+  async.parallel({
+    newUser: function(parallelCB) {
+      putNewUserInDb(rep, tokens, parallelCB);
+    },
+    totalRep: function(parallelCB) {
+      addToCachedRep(rep, parallelCB);
+    }
+  }, function(err, results) {
+    return cb(err, results.newUser);
+  })
 }
 
 function getUser(event, cb) {
@@ -147,4 +147,38 @@ function log(prefix) {
     console.log('\n');
   };
 
+}
+
+function putNewUserInDb(rep, tokens, cb) {
+  var newUser = {
+    "id": uuid.v4(),
+    "tokens": tokens,
+    "reputation": rep,
+    "biddingCount": 0,
+    "createdAt": Date.now()
+  };
+
+  var params = {
+    TableName : tableName,
+    Item: newUser
+  };
+
+  dynamodbDocClient.put(params, function(err, data) {
+    return cb(err, newUser);
+  });
+}
+
+function addToCachedRep(rep, cb) {
+  var params = {
+    TableName: cachingTableName,
+    Key: { type: "totalRepInSystem" },
+    UpdateExpression: 'set #val = #val + :v',
+    ExpressionAttributeNames: { '#val' : 'theValue' },
+    ExpressionAttributeValues: { ':v' : rep },
+    ReturnValues: 'NONE'
+  };
+
+  return dynamodbDocClient.update(params, function(err, data) {
+    return cb(err, null);
+  });
 }
