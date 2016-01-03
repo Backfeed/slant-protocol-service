@@ -22,7 +22,6 @@ module.exports = {
   createBidding: createBidding,
   getBiddingWithLeadingContribution: getBiddingWithLeadingContribution,
   getBiddingContributions: getBiddingContributions,
-  getBiddingUsers: getBiddingUsers,
   getBiddingUserEvaluations: getBiddingUserEvaluations,
   endBidding: endBidding,
   getContributions: getContributions,
@@ -215,13 +214,6 @@ function getContributions(event, cb) {
     return cb(err, data.Items);
   });
 }
-function getBiddingUsers(event, cb) {
-
-  var response = [];
-
-  return cb(null, response);
-}
-
 
 function getBiddingUserEvaluations(event, cb) {
   async.waterfall([
