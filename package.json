@@ -26,6 +26,7 @@
     "chai": "3.4.1",
     "chakram": "1.2.1",
     "mocha": "2.3.4",
-    "serverless-helpers-js": "0.0.3"
+    "serverless-helpers-js": "0.0.3",
+    "underscore": "1.8.3"
   }
 }
