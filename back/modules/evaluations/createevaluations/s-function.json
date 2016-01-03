@@ -22,10 +22,26 @@
           "responses": {
             "400": {
               "statusCode": "400",
-              "selectionPattern": ".+",
+              "selectionPattern": "(?!404|409)(4[0-9][0-9]).*",
               "responseParameters": {},
               "responseTemplates": {
-                "application/json": "#set($inputRoot = $input.path('$'))\n{\"errorMessage\": \"$inputRoot.errorMessage\"}"
+                "application/json": "#set($inputRoot = $input.path('$'))\n{\"error\": \"$inputRoot.errorMessage.substring(4)\"}"
+              }
+            },
+            "404": {
+              "statusCode": "404",
+              "selectionPattern": "404.*",
+              "responseParameters": {},
+              "responseTemplates": {
+                "application/json": "#set($inputRoot = $input.path('$'))\n{\"error\": \"$inputRoot.errorMessage.substring(4)\"}"
+              }
+            },
+            "409": {
+              "statusCode": "409",
+              "selectionPattern": "409.*",
+              "responseParameters": {},
+              "responseTemplates": {
+                "application/json": "#set($inputRoot = $input.path('$'))\n{\"error\": \"$inputRoot.errorMessage.substring(4)\"}"
               }
             },
             "default": {
