@@ -283,46 +283,56 @@
             ]
           ]
         },
-        "GlobalSecondaryIndexes" : [
+        "GlobalSecondaryIndexes": [
           {
-          "IndexName" : "evaluations-biddingId-userId-index",
-          "KeySchema" : [
-            {
-              "AttributeName" : "biddingId",
-              "KeyType" : "HASH"
-            },
-            {
-              "AttributeName" : "userId",
-              "KeyType" : "RANGE"
-            }
-          ],
-          "Projection" : {
-            "ProjectionType" : "ALL"
-          },
-          "ProvisionedThroughput" : {
-            "ReadCapacityUnits" : "2",
-            "WriteCapacityUnits" : "2"
-          }
-        },
-          {
-            "IndexName" : "contributionId-value-index",
-            "KeySchema" : [
+            "IndexName": "evaluations-biddingId-userId-index",
+            "KeySchema": [
               {
-                "AttributeName" : "contributionId",
-                "KeyType" : "HASH"
+                "AttributeName": "biddingId",
+                "KeyType": "HASH"
               },
               {
-                "AttributeName" : "value",
-                "KeyType" : "RANGE"
+                "AttributeName": "userId",
+                "KeyType": "RANGE"
               }
             ],
-            "Projection" : {
-              "NonKeyAttributes" : ["userId"],
-              "ProjectionType" : "INCLUDE"
+            "Projection": {
+              "ProjectionType": "ALL"
             },
-            "ProvisionedThroughput" : {
-              "ReadCapacityUnits" : "1",
-              "WriteCapacityUnits" : "1"
+            "ProvisionedThroughput": {
+              "ReadCapacityUnits": {
+                "Ref": "LowRWThroughput"
+              },
+              "WriteCapacityUnits": {
+                "Ref": "LowRWThroughput"
+              }
+            }
+          },
+          {
+            "IndexName": "contributionId-value-index",
+            "KeySchema": [
+              {
+                "AttributeName": "contributionId",
+                "KeyType": "HASH"
+              },
+              {
+                "AttributeName": "value",
+                "KeyType": "RANGE"
+              }
+            ],
+            "Projection": {
+              "NonKeyAttributes": [
+                "userId"
+              ],
+              "ProjectionType": "INCLUDE"
+            },
+            "ProvisionedThroughput": {
+              "ReadCapacityUnits": {
+                "Ref": "LowRWThroughput"
+              },
+              "WriteCapacityUnits": {
+                "Ref": "LowRWThroughput"
+              }
             }
           }
         ]
