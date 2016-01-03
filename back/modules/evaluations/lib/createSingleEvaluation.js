@@ -101,7 +101,6 @@ module.exports.execute = function(event, cb) {
       log("totalContributionRep", totalContributionRep);
       evaluators = updateEvaluatorsRepForSameVoters(evaluators, currentUserRep, totalRepInSystem, totalContributionRep, totalVoteRep, event.value, event.userId);
       evaluators = updateEvaluatorsRep(evaluators, currentUserRep, totalRepInSystem);
-      currentUser.reputation = burnRepForCurrentUser(currentUserRep, totalContributionRep, totalVoteRep, totalRepInSystem);
 
       async.parallel({
         updateEvaluatorsRepToDb: function(parallelCB) {
