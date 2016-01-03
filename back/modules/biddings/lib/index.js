@@ -14,12 +14,13 @@ var tableName = 'slant-biddings-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 var contributionsTableName = 'slant-contributions-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 var evaluationsTableName = 'slant-evaluations-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 var usersTableName = 'slant-users-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
+var cachingTableName = 'slant-caching-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
 
 var hLog = log('HELPERS');
 
 module.exports = {
   createBidding: createBidding,
-  getBiddingWithWinningTitle: getBiddingWithWinningTitle,
+  getBiddingWithLeadingContribution: getBiddingWithLeadingContribution,
   getBiddingContributions: getBiddingContributions,
   getBiddingUsers: getBiddingUsers,
   getBiddingUserEvaluations: getBiddingUserEvaluations,
@@ -63,25 +64,25 @@ function getBidding(event, cb) {
   });
 }
 
-function getBiddingWithWinningTitle(event, cb) {
+function getBiddingWithLeadingContribution(event, cb) {
   async.parallel({
     bidding: function(parallelCB) {
       getBidding(event, parallelCB);
     },
-    winningTitle: function(parallelCB) {
-      getBiddingWinningTitle(event.id, parallelCB);
+    winningContribution: function(parallelCB) {
+      getBiddingWinningContribution(event.id, parallelCB);
     }
   },
     function(err, results) {
       var bidding = results.bidding;
-      bidding.winningTitleId = results.winningTitle;
+      bidding.winningContributionId = results.winningContribution.id;
+      bidding.winningContributionScore = results.winningContribution.score;
       cb(err, bidding);
     }
   );
-
 }
 
-function getBiddingWinningTitle(biddingId, cb) {
+function getBiddingWinningContribution(biddingId, cb) {
   var evaluations;
   async.waterfall([
     function(callback) {
@@ -93,7 +94,7 @@ function getBiddingWinningTitle(biddingId, cb) {
     },
     function(response, callback) {
       var users = response;
-      calcWinningTitle(users, evaluations, callback);
+      calcWinningContribution(users, evaluations, callback);
     }
   ],
     function(err, result) {
@@ -102,7 +103,7 @@ function getBiddingWinningTitle(biddingId, cb) {
   );
 }
 
-function calcWinningTitle(users, evaluations, callback) {
+function calcWinningContribution(users, evaluations, callback) {
   var scores = {};
   _.each(evaluations, function(evaluation) {
     if (!scores[evaluation.contributionId])
@@ -110,8 +111,12 @@ function calcWinningTitle(users, evaluations, callback) {
 
     scores[evaluation.contributionId] += getUserRep(users, evaluation.userId);
   });
-  var winningContributionId = _.max(_.pairs(scores), _.last)[0];
-  callback(null, winningContributionId);
+  var winningContribution = _.max(_.pairs(scores), _.last);
+  winningContribution = {
+    id: winningContribution[0],
+    score: winningContribution[1]
+  };
+  callback(null, winningContribution);
 }
 
 function getUserRep(users, userId) {
@@ -256,47 +261,49 @@ function getUserEvaluations(event, cb) {
 }
 
 function endBidding(event, cb) {
+  var biddingId = event.id;
+  var totalSystemRep;
+  var winningContributionId;
+  var winningContributionScore;
+  var winningContributorId;
 
-  // Protocol calculates the winning contribution
-  getContributions(event, function(err, contributions) {
-    if (err) {
-      console.log('endBidding', err);
-      return cb(err);
+  async.waterfall([
+
+    function(waterfallCB) {
+      async.parallel({
+        totalSystemRep: function(parallelCB) {
+          getTotalRep(parallelCB);
+        },
+        winningContribution: function(parallelCB) {
+          getBiddingWinningContribution(biddingId, parallelCB);
+        }
+      }, function(err, results) {
+        totalSystemRep = results.totalSystemRep;
+        winningContributionId = results.winningContribution.id
+        winningContributionScore = results.winningContribution.score
+        waterfallCB(err, null);
+      });
+    },
+
+    function(emptyResult, waterfallCB) {
+      getUserIdByContributionId(winningContributionId, waterfallCB);
+    },
+
+    function(winningContributorId) {
+      async.parallel({
+        endBiddingInDb: function(parallelCB) {
+          endBiddingInDb(biddingId, winningContributionId, parallelCB);
+        },
+        rewardContributor: function(parallelCB) {
+          rewardContributor(winningContributorId, winningContributionScore, totalSystemRep, parallelCB);
+        }
+      }, function(err, results) {
+        var bidding = results.endBiddingInDb;
+        bidding.winningContributorId = winningContributorId
+        cb(err, bidding);
+      });
     }
-
-    console.log('contributions', contributions);
-
-    var winningContribution = _.max(contributions, function(contribution) {
-      return contribution.score;
-    });
-
-    console.log('winningContribution', winningContribution);
-
-    // the callback updates the DB
-    var params = {
-      TableName: tableName,
-      Key: { id: event.id },
-      UpdateExpression: 'set #sta = :s, #win = :w, #end = :e',
-      ExpressionAttributeNames: {
-        '#sta' : 'status',
-        '#win' : 'winningContribution',
-        '#end' : 'endedAt'
-      },
-      ExpressionAttributeValues: {
-        ':s' : 'Completed',
-        ':w' : winningContribution.id,
-        ':e' : Date.now()
-      },
-      ReturnValues: 'ALL_NEW'
-    };
-
-    return dynamodbDocClient.update(params, function(err, data) {
-      console.log('DB update CB: data', data);
-      return cb(err, data.Attributes);
-    });
-
-  });
-
+  ]);
 }
 
 function deleteBidding(event, cb) {
@@ -341,5 +348,81 @@ function log(prefix) {
     console.log('***************** /' + 'BIDDINGS: ' + prefix + ' *******************');
     // console.log('\n');
   };
+
+}
+
+function endBiddingInDb(id, winningContributionId, cb) {
+  var params = {
+    TableName: tableName,
+    Key: { id: id },
+    UpdateExpression: 'set #sta = :s, #win = :w, #end = :e',
+    ExpressionAttributeNames: {
+      '#sta' : 'status',
+      '#win' : 'winningContributionId',
+      '#end' : 'endedAt'
+    },
+    ExpressionAttributeValues: {
+      ':s' : 'Completed',
+      ':w' : winningContributionId,
+      ':e' : Date.now()
+    },
+    ReturnValues: 'ALL_NEW'
+  };
+
+  return dynamodbDocClient.update(params, function(err, data) {
+    return cb(err, data.Attributes);
+  });
+}
+
+function rewardContributor(contributorId, contributionScore, totalSystemRep, cb) {
+
+  var params = {
+    TableName: usersTableName,
+    Key: { id: contributorId },
+    UpdateExpression: 'set #tok = #tok + :t, #rep = #rep + :r',
+    ExpressionAttributeNames: {'#tok' : 'tokens', '#rep' : 'reputation'},
+    ExpressionAttributeValues: {
+      ':t' : 10 * contributionScore / totalSystemRep,
+      ':r' : 10 * contributionScore / totalSystemRep
+    },
+    ReturnValues: 'ALL_NEW'
+  };
+  return dynamodbDocClient.update(params, function(err, data) {
+    return cb(err, data.Attributes);
+  });
+}
+
+function getTotalRep(cb) {
+
+  var params = {
+    TableName : cachingTableName,
+    Key: { type: "totalRepInSystem" }
+  };
+
+  return dynamodbDocClient.get(params, function(err, data) {
+    if (_.isEmpty(data)) {
+      err = '404:Resource not found.';
+      return cb(err);
+    }
+    return cb(err, data.Item.theValue);
+  });
+}
+
+function getUserIdByContributionId(winningContributionId, cb) {
+
+  var params = {
+    TableName : contributionsTableName,
+    Key: {
+      id: winningContributionId
+    }
+  };
+
+  return dynamodbDocClient.get(params, function(err, data) {
+    if (_.isEmpty(data)) {
+      err = '404:Resource not found.';
+      return cb(err);
+    }
+    return cb(err, data.Item.userId);
+  });
 
 }
