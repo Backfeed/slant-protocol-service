@@ -253,6 +253,26 @@
           {
             "AttributeName": "id",
             "AttributeType": "S"
+          },
+          {
+            "AttributeName": "biddingId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "contributionId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "userId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "value",
+            "AttributeType": "N"
+          },
+          {
+            "AttributeName": "createdAt",
+            "AttributeType": "N"
           }
         ],
         "KeySchema": [
@@ -449,7 +469,7 @@
               {
                 "Ref": "ProjectName"
               },
-              "-biddings-",
+              "-caching-",
               {
                 "Ref": "DataModelStage"
               }
