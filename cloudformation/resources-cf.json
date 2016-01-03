@@ -34,6 +34,18 @@
     "DynamoRWThroughput": {
       "Type": "String",
       "Default": "1"
+    },
+    "LowRWThroughput": {
+      "Type": "String",
+      "Default": "1"
+    },
+    "MediumRWThroughput": {
+      "Type": "String",
+      "Default": "3"
+    },
+    "HighRWThroughput": {
+      "Type": "String",
+      "Default": "5"
     }
   },
   "Metadata": {
@@ -171,10 +183,7 @@
                           {
                             "Ref": "ProjectName"
                           },
-                          "-*-",
-                          {
-                            "Ref": "DataModelStage"
-                          }
+                          "-*"
                         ]
                       ]
                     }
@@ -214,10 +223,10 @@
         ],
         "ProvisionedThroughput": {
           "ReadCapacityUnits": {
-            "Ref": "DynamoRWThroughput"
+            "Ref": "LowRWThroughput"
           },
           "WriteCapacityUnits": {
-            "Ref": "DynamoRWThroughput"
+            "Ref": "LowRWThroughput"
           }
         },
         "TableName": {
@@ -254,10 +263,10 @@
         ],
         "ProvisionedThroughput": {
           "ReadCapacityUnits": {
-            "Ref": "DynamoRWThroughput"
+            "Ref": "HighRWThroughput"
           },
           "WriteCapacityUnits": {
-            "Ref": "DynamoRWThroughput"
+            "Ref": "HighRWThroughput"
           }
         },
         "TableName": {
@@ -273,7 +282,50 @@
               }
             ]
           ]
-        }
+        },
+        "GlobalSecondaryIndexes" : [
+          {
+          "IndexName" : "evaluations-biddingId-userId-index",
+          "KeySchema" : [
+            {
+              "AttributeName" : "biddingId",
+              "KeyType" : "HASH"
+            },
+            {
+              "AttributeName" : "userId",
+              "KeyType" : "RANGE"
+            }
+          ],
+          "Projection" : {
+            "ProjectionType" : "ALL"
+          },
+          "ProvisionedThroughput" : {
+            "ReadCapacityUnits" : "2",
+            "WriteCapacityUnits" : "2"
+          }
+        },
+          {
+            "IndexName" : "contributionId-value-index",
+            "KeySchema" : [
+              {
+                "AttributeName" : "contributionId",
+                "KeyType" : "HASH"
+              },
+              {
+                "AttributeName" : "value",
+                "KeyType" : "RANGE"
+              }
+            ],
+            "Projection" : {
+              "NonKeyAttributes" : ["userId"],
+              "ProjectionType" : "INCLUDE"
+            },
+            "ProvisionedThroughput" : {
+              "ReadCapacityUnits" : "1",
+              "WriteCapacityUnits" : "1"
+            }
+          }
+        ]
       }
     },
     "ContributionsDynamoDB": {
@@ -294,10 +346,10 @@
         ],
         "ProvisionedThroughput": {
           "ReadCapacityUnits": {
-            "Ref": "DynamoRWThroughput"
+            "Ref": "MediumRWThroughput"
           },
           "WriteCapacityUnits": {
-            "Ref": "DynamoRWThroughput"
+            "Ref": "MediumRWThroughput"
           }
         },
         "TableName": {
@@ -334,10 +386,50 @@
         ],
         "ProvisionedThroughput": {
           "ReadCapacityUnits": {
-            "Ref": "DynamoRWThroughput"
+            "Ref": "LowRWThroughput"
           },
           "WriteCapacityUnits": {
-            "Ref": "DynamoRWThroughput"
+            "Ref": "LowRWThroughput"
+          }
+        },
+        "TableName": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "ProjectName"
+              },
+              "-biddings-",
+              {
+                "Ref": "DataModelStage"
+              }
+            ]
+          ]
+        }
+      }
+    },
+    "CachingDynamoDB": {
+      "Type": "AWS::DynamoDB::Table",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "type",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "type",
+            "KeyType": "HASH"
+          }
+        ],
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": {
+            "Ref": "LowRWThroughput"
+          },
+          "WriteCapacityUnits": {
+            "Ref": "LowRWThroughput"
           }
         },
         "TableName": {
