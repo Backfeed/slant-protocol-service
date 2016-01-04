@@ -1,23 +1,5 @@
 'use strict';
 
-var _     = require('underscore');
-var AWS   = require('aws-sdk');
-var uuid  = require('node-uuid');
-var async = require('async');
-
-var dynamoConfig = {
-  sessionToken:    process.env.AWS_SESSION_TOKEN,
-  region:          process.env.AWS_REGION
-};
-var dynamodbDocClient = new AWS.DynamoDB.DocumentClient(dynamoConfig);
-var tableName = 'slant-biddings-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
-var contributionsTableName = 'slant-contributions-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
-var evaluationsTableName = 'slant-evaluations-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
-var usersTableName = 'slant-users-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
-var cachingTableName = 'slant-caching-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
-
-var hLog = log('HELPERS');
-
 module.exports = {
   createBidding: createBidding,
   getBiddingWithLeadingContribution: getBiddingWithLeadingContribution,
@@ -26,41 +8,47 @@ module.exports = {
   endBidding: endBidding,
   getContributions: getContributions,
   deleteBidding: deleteBidding,
-  getWinningContribution: getWinningContribution,
-  log: log
+  getWinningContribution: getWinningContribution
 };
+
+var _     = require('underscore');
+var async = require('async');
+var util = require('../../util');
 
 function createBidding(event, cb) {
 
   var newBidding = {
-    "id": uuid.v4(),
+    "id": util.uuid(),
     "status": 'InProgress',
     "createdAt": Date.now()
   };
+
   var params = {
-    TableName : tableName,
+    TableName : util.tables.bidding,
     Item: newBidding
   };
-  dynamodbDocClient.put(params, function(err, data) {
+
+  util.dynamoDoc.put(params, function(err, data) {
     return cb(err, newBidding);
   });
+
 }
 
 function getBidding(event, cb) {
+
   var params = {
-    TableName : tableName,
-    Key: {
-      id: event.id
-    }
+    TableName : util.tables.bidding,
+    Key: { id: event.id }
   };
 
-  return dynamodbDocClient.get(params, function(err, data) {
+  return util.dynamoDoc.get(params, function(err, data) {
     if (_.isEmpty(data)) {
       err = '404:Resource not found.';
       return cb(err);
     }
     return cb(err, data.Item);
   });
+
 }
 
 function getBiddingWithLeadingContribution(event, cb) {
@@ -127,7 +115,7 @@ function getUserRep(users, userId) {
 
 function getPositiveEvaluationsByBiddingId(biddingId, callback) {
   var params = {
-    TableName : evaluationsTableName,
+    TableName : util.tables.evaluations,
     IndexName: 'biddingId-value-index',
     ExpressionAttributeNames: { '#v': 'value' }, // Need to do this since 'value' is a resevred dynamoDB word
     KeyConditionExpression: 'biddingId = :bkey and #v = :v',
@@ -136,7 +124,7 @@ function getPositiveEvaluationsByBiddingId(biddingId, callback) {
       ':v': 1
     }
   };
-  dynamodbDocClient.query(params, function(err, data) {
+  util.dynamoDoc.query(params, function(err, data) {
     return callback(err, data.Items);
   });
 }
@@ -154,12 +142,12 @@ function getUsersByEvaluations(evaluations, callback) {
     return item.id;
   });
 
-  params.RequestItems[usersTableName] = {
+  params.RequestItems[util.tables.users] = {
     Keys: Keys
   };
 
-  dynamodbDocClient.batchGet(params, function(err, data) {
-    return callback(err, data.Responses[usersTableName]);
+  util.dynamoDoc.batchGet(params, function(err, data) {
+    return callback(err, data.Responses[util.tables.users]);
   });
 }
 
@@ -199,20 +187,20 @@ function getBiddingContributions(event, cb) {
 function getContributions(event, cb) {
 
   var params = {
-    TableName : contributionsTableName,
+    TableName : util.tables.contributions,
     IndexName: 'biddingId-index',
     KeyConditionExpression: 'biddingId = :hkey',
-    ExpressionAttributeValues: {
-      ':hkey': event.id
-    }
+    ExpressionAttributeValues: { ':hkey': event.id }
   };
-  dynamodbDocClient.query(params, function(err, data) {
+
+  util.dynamoDoc.query(params, function(err, data) {
     if (_.isEmpty(data)) {
       err = '404:Resource not found.';
       return cb(err);
     }
     return cb(err, data.Items);
   });
+
 }
 
 function getBiddingUserEvaluations(event, cb) {
@@ -232,7 +220,7 @@ function getBiddingUserEvaluations(event, cb) {
 function getUserEvaluations(event, cb) {
 
   var params = {
-    TableName : evaluationsTableName,
+    TableName : util.tables.evaluations,
     IndexName: 'evaluations-biddingId-userId-index',
     KeyConditionExpression: 'biddingId = :hkey and userId = :rkey',
     ExpressionAttributeValues: {
@@ -240,7 +228,7 @@ function getUserEvaluations(event, cb) {
       ':rkey': event.userId
     }
   };
-  dynamodbDocClient.query(params, function(err, data) {
+  util.dynamoDoc.query(params, function(err, data) {
     if (_.isEmpty(data)) {
       err = '404:Resource not found.';
       return cb(err);
@@ -301,51 +289,38 @@ function endBidding(event, cb) {
 function deleteBidding(event, cb) {
 
   var params = {
-    TableName : tableName,
-    Key: {
-      id: event.id
-    },
+    TableName : util.tables.bidding,
+    Key: { id: event.id },
     ReturnValues: 'ALL_OLD'
   };
-  return dynamodbDocClient.delete(params, function(err, data) {
+
+  return util.dynamoDoc.delete(params, function(err, data) {
     if (_.isEmpty(data)) {
       err = '404:Resource not found.';
       return cb(err);
     }
     return cb(err, data);
   });
+
 }
 
 function getWinningContribution(contributionId) {
+
   var params = {
     TableName : contributionTableName,
-    Key: {
-      id:contributionId
-    }
+    Key: { id:contributionId }
   };
-  dynamodbDocClient.get(params, function(err, data) {
+
+  util.dynamoDoc.get(params, function(err, data) {
     if (err) return {}; //err;
     else return data.Item;
   });
-}
-
-function log(prefix) {
-
-  return function() {
-    if (process.env.SERVERLESS_STAGE === 'development')
-      return;
-
-    console.log('***************** ' + 'BIDDINGS: ' + prefix + ' *******************');
-    _.each(arguments, function(msg, i) { console.log(msg); });
-    console.log('***************** /' + 'BIDDINGS: ' + prefix + ' *******************');
-    // console.log('\n');
-  };
 
 }
 
 function endBiddingInDb(id, winningContributionId, cb) {
   var params = {
-    TableName: tableName,
+    TableName: util.tables.bidding,
     Key: { id: id },
     UpdateExpression: 'set #sta = :s, #win = :w, #end = :e',
     ExpressionAttributeNames: {
@@ -361,15 +336,14 @@ function endBiddingInDb(id, winningContributionId, cb) {
     ReturnValues: 'ALL_NEW'
   };
 
-  return dynamodbDocClient.update(params, function(err, data) {
+  return util.dynamoDoc.update(params, function(err, data) {
     return cb(err, data.Attributes);
   });
 }
 
 function rewardContributor(contributorId, contributionScore, totalSystemRep, cb) {
-
   var params = {
-    TableName: usersTableName,
+    TableName: util.tables.users,
     Key: { id: contributorId },
     UpdateExpression: 'set #tok = #tok + :t, #rep = #rep + :r',
     ExpressionAttributeNames: {'#tok' : 'tokens', '#rep' : 'reputation'},
@@ -379,7 +353,7 @@ function rewardContributor(contributorId, contributionScore, totalSystemRep, cb)
     },
     ReturnValues: 'ALL_NEW'
   };
-  return dynamodbDocClient.update(params, function(err, data) {
+  return util.dynamoDoc.update(params, function(err, data) {
     return cb(err, data.Attributes);
   });
 }
@@ -387,29 +361,28 @@ function rewardContributor(contributorId, contributionScore, totalSystemRep, cb)
 function getTotalRep(cb) {
 
   var params = {
-    TableName : cachingTableName,
+    TableName : util.tables.caching,
     Key: { type: "totalRepInSystem" }
   };
 
-  return dynamodbDocClient.get(params, function(err, data) {
+  return util.dynamoDoc.get(params, function(err, data) {
     if (_.isEmpty(data)) {
       err = '404:Resource not found.';
       return cb(err);
     }
     return cb(err, data.Item.theValue);
   });
+
 }
 
 function getUserIdByContributionId(winningContributionId, cb) {
 
   var params = {
-    TableName : contributionsTableName,
-    Key: {
-      id: winningContributionId
-    }
+    TableName : util.tables.contributions,
+    Key: { id: winningContributionId }
   };
 
-  return dynamodbDocClient.get(params, function(err, data) {
+  return util.dynamoDoc.get(params, function(err, data) {
     if (_.isEmpty(data)) {
       err = '404:Resource not found.';
       return cb(err);

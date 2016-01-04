@@ -1,17 +1,17 @@
 {
   "functions": {
-    "cachetotalrep": {
+    "synccahcedsystemrep": {
       "custom": {
         "excludePatterns": [],
         "envVars": []
       },
-      "handler": "modules/util/cachetotalrep/handler.handler",
+      "handler": "modules/util/synccahcedsystemrep/handler.handler",
       "timeout": 6,
       "memorySize": 1024,
       "eventSourceArn": "",
       "endpoints": [
         {
-          "path": "util/cachetotalrep",
+          "path": "util/synccahcedsystemrep",
           "method": "GET",
           "authorizationType": "none",
           "apiKeyRequired": false,

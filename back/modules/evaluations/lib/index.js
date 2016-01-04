@@ -1,30 +1,20 @@
 'use strict';
 
-var _     = require('underscore');
-var AWS   = require('aws-sdk');
-var uuid  = require('node-uuid');
-var async = require('async');
-
-var dynamoConfig = {
-  sessionToken:    process.env.AWS_SESSION_TOKEN,
-  region:          process.env.AWS_REGION
-};
-var dynamodbDocClient = new AWS.DynamoDB.DocumentClient(dynamoConfig);
-var tableName = 'slant-evaluations-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
-var createSingleEvaluation = require('../lib/createSingleEvaluation');
-var hLog = log('HELPERS');
-
 module.exports = {
   createEvaluation: createEvaluation,
   getEvaluation: getEvaluation,
-  deleteEvaluation: deleteEvaluation,
-  log: log
+  deleteEvaluation: deleteEvaluation
 };
+
+var _     = require('underscore');
+var async = require('async');
+var util = require('../../util');
+var createSingleEvaluation = require('../lib/createSingleEvaluation');
 
 function createEvaluation(event, cb) {
 
   var params = {
-    TableName : tableName,
+    TableName : util.tables.evaluations,
     RequestItems: {},
     ReturnConsumedCapacity: 'NONE',
     ReturnItemCollectionMetrics: 'NONE'
@@ -35,7 +25,7 @@ function createEvaluation(event, cb) {
   var newEvaluation;
   async.each(event.evaluations, function(element, callback) {
     newEvaluation = {
-      "id": element.id || uuid.v4(),
+      "id": element.id || util.uuid(),
       "userId": event.userId,
       "biddingId": event.biddingId,
       "contributionId": element.contributionId,
@@ -55,8 +45,8 @@ function createEvaluation(event, cb) {
 
   }, function(err) {
     console.log('iterate done');
-    params.RequestItems[tableName] = submittedEvaluations;
-    dynamodbDocClient.batchWrite(params, function(err, data) {
+    params.RequestItems[util.tables.evaluations] = submittedEvaluations;
+    util.dynamoDoc.batchWrite(params, function(err, data) {
       return cb(err, submittedEvaluationsIds);
     });
   });
@@ -66,44 +56,29 @@ function createEvaluation(event, cb) {
 function getEvaluation(event, cb) {
 
   var params = {
-    TableName : tableName,
-    Key: {
-      id: event.id
-    }
+    TableName : util.tables.evaluations,
+    Key: { id: event.id }
   };
 
-  return dynamodbDocClient.get(params, function(err, data) {
+  return util.dynamoDoc.get(params, function(err, data) {
     if (_.isEmpty(data)) {
       err = '404:Resource not found.';
       return cb(err);
     }
     return cb(err, data.Item);
   });
+
 }
 
 function deleteEvaluation(event, cb) {
 
   var params = {
-    TableName : tableName,
-    Key: {
-      id: event.id
-    }
+    TableName : util.tables.evaluations,
+    Key: { id: event.id }
   };
-  return dynamodbDocClient.delete(params, function(err, data) {
+  
+  return util.dynamoDoc.delete(params, function(err, data) {
     return cb(err, params.Key);
   });
-}
-
-function log(prefix) {
-
-  if (process.env.SERVERLESS_STAGE === 'development')
-    return;
-
-  return function() {
-    console.log('***************** ' + 'EVALUATIONS: ' + prefix + ' *******************');
-    _.each(arguments, function(msg, i) { console.log(msg); });
-    console.log('***************** /' + 'EVALUATIONS: ' + prefix + ' *******************');
-    // console.log('\n');
-  };
-
+  
 }

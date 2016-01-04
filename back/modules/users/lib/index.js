@@ -1,37 +1,21 @@
 'use strict';
 
-var _    = require('underscore');
-var AWS  = require('aws-sdk');
-var uuid = require('node-uuid');
-
-var dynamoConfig = {
-  sessionToken:    process.env.AWS_SESSION_TOKEN,
-  region:          process.env.AWS_REGION
-};
-
-var dynamodbDocClient = new AWS.DynamoDB.DocumentClient(dynamoConfig);
-var tableName = 'slant-users-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
-var cachingTableName = 'slant-caching-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
-var contributionsTableName = 'slant-contributions-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
-var evaluationsTableName = 'slant-evaluations-' + process.env.SERVERLESS_DATA_MODEL_STAGE;
-var async = require('async');
-var hLog = log('HELPERS');
-
 module.exports = {
   createUser: createUser,
   getUser: getUser,
   updateUser: updateUser,
   deleteUser: deleteUser,
   getUserEvaluations: getUserEvaluations,
-  getUserContributions: getUserContributions,
-  log: log
+  getUserContributions: getUserContributions
 };
 
-function createUser(event, cb) {
+var _     = require('underscore');
+var async = require('async');
+var util  = require('../../util');
 
+function createUser(event, cb) {
   var rep = event.reputation || 11;
   var tokens = event.tokens;
-
   async.parallel({
     newUser: function(parallelCB) {
       putNewUserInDb(rep, tokens, parallelCB);
@@ -41,19 +25,17 @@ function createUser(event, cb) {
     }
   }, function(err, results) {
     return cb(err, results.newUser);
-  })
+  });
 }
 
 function getUser(event, cb) {
 
   var params = {
-    TableName : tableName,
-    Key: {
-      id: event.id
-    }
+    TableName : util.tables.users,
+    Key: { id: event.id }
   };
 
-  return dynamodbDocClient.get(params, function(err, data) {
+  return util.dynamoDoc.get(params, function(err, data) {
     if (_.isEmpty(data)) {
       err = '404:Resource not found.';
       return cb(err);
@@ -63,16 +45,14 @@ function getUser(event, cb) {
 }
 
 function getUserEvaluations(event, cb) {
-
   var params = {
-    TableName : evaluationsTableName,
+    TableName : util.tables.evaluations,
     IndexName: 'userId-index',
     KeyConditionExpression: 'userId = :hkey',
-    ExpressionAttributeValues: {
-      ':hkey': event.id
-    }
+    ExpressionAttributeValues: { ':hkey': event.id }
   };
-  dynamodbDocClient.query(params, function(err, data) {
+
+  util.dynamoDoc.query(params, function(err, data) {
     if (_.isEmpty(data.Items)) {
       err = '404:Resource not found.';
       return cb(err);
@@ -84,14 +64,14 @@ function getUserEvaluations(event, cb) {
 function getUserContributions(event, cb) {
 
   var params = {
-    TableName : contributionsTableName,
+    TableName : util.tables.contributions,
     IndexName: 'contributions-by-userId-index',
     KeyConditionExpression: 'userId = :hkey',
     ExpressionAttributeValues: {
       ':hkey': event.id
     }
   };
-  dynamodbDocClient.query(params, function(err, data) {
+  util.dynamoDoc.query(params, function(err, data) {
     if (_.isEmpty(data.Items)) {
       err = '404:Resource not found.';
       return cb(err);
@@ -101,14 +81,11 @@ function getUserContributions(event, cb) {
 }
 
 function deleteUser(event, cb) {
-
   var params = {
-    TableName : tableName,
-    Key: {
-      id: event.id
-    }
+    TableName : util.tables.users,
+    Key: { id: event.id }
   };
-  return dynamodbDocClient.delete(params, function(err, data) {
+  return util.dynamoDoc.delete(params, function(err, data) {
     return cb(err, params.Key);
   });
 }
@@ -116,7 +93,7 @@ function deleteUser(event, cb) {
 function updateUser(event, cb) {
 
   var params = {
-    TableName: tableName,
+    TableName: util.tables.users,
     Key: {
       id: event.id
     },
@@ -129,29 +106,14 @@ function updateUser(event, cb) {
     ReturnValues: 'ALL_NEW'
   };
 
-  //ConditionExpression: 'attribute_exists',
-  return dynamodbDocClient.update(params, function(err, data) {
+  return util.dynamoDoc.update(params, function(err, data) {
     return cb(err, data.Attributes);
   });
 }
 
-function log(prefix) {
-
-  return function() {
-    if (process.env.SERVERLESS_STAGE === 'development')
-      return;
-    
-    console.log('***************** ' + 'USERS: ' + prefix + ' *******************');
-    _.each(arguments, function(msg, i) { console.log(msg); });
-    console.log('***************** /' + 'USERS: ' + prefix + ' *******************');
-    console.log('\n');
-  };
-
-}
-
 function putNewUserInDb(rep, tokens, cb) {
   var newUser = {
-    "id": uuid.v4(),
+    "id": util.uuid(),
     "tokens": tokens,
     "reputation": rep,
     "biddingCount": 0,
@@ -159,18 +121,18 @@ function putNewUserInDb(rep, tokens, cb) {
   };
 
   var params = {
-    TableName : tableName,
+    TableName : util.tables.users,
     Item: newUser
   };
 
-  dynamodbDocClient.put(params, function(err, data) {
+  util.dynamoDoc.put(params, function(err, data) {
     return cb(err, newUser);
   });
 }
 
 function addToCachedRep(rep, cb) {
   var params = {
-    TableName: cachingTableName,
+    TableName: util.tables.caching,
     Key: { type: "totalRepInSystem" },
     UpdateExpression: 'set #val = #val + :v',
     ExpressionAttributeNames: { '#val' : 'theValue' },
@@ -178,7 +140,7 @@ function addToCachedRep(rep, cb) {
     ReturnValues: 'NONE'
   };
 
-  return dynamodbDocClient.update(params, function(err, data) {
+  return util.dynamoDoc.update(params, function(err, data) {
     return cb(err, null);
   });
 }

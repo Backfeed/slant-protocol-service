@@ -12,15 +12,15 @@ var ServerlessHelpers = require('serverless-helpers-js').loadEnv();
 
 // Require Logic
 var lib = require('../lib');
-var log = lib.log("GET TOTAL REP");
 
 // Lambda Handler
 module.exports.handler = function(event, context) {
 
-  log("event", event);
-
-  lib.getTotalRep(event, function(error, response) {
+  lib.syncCachedSystemRep(event, function(error, response) {
+    console.log('event', event.Records[0]);
+    console.log('event.dynamodb', event.Records[0].dynamodb);
+    console.log('error', error);
+    console.log('response', response);
     return context.done(error, response);
   });
-  
 };
