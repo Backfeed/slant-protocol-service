@@ -29,7 +29,7 @@ describe("Test protocol according to excel", function() {
         p3 = users[2];
         p4 = users[3];
         p5 = users[4];
-        var biddingId = res[1].body.id;
+        biddingId = res[1].body.id;
         console.log('users', users);
         console.log('biddingId', biddingId);
         arr = [];
