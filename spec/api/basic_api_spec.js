@@ -7,18 +7,6 @@ expect = chakram.expect;
 
 var util = require('../util');
 
-var URL = 'https://api.backfeed.cc/slantdev';
-var userId = '701676b1-7866-44ef-a02f-2c2e7f40a30a';
-
-var params =  {
-  headers: { 'x-api-key': process.env.X_API_KEY }
-};
-
-var userData = {
-  tokens: 2,
-  reputation: 1
-};
-
 describe("Slant Protocol API", function() {
 
 
