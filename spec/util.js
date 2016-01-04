@@ -2,6 +2,7 @@ module.exports = {
 
   user: {
     create: createUser,
+    createN: createUsers,
     get: getUser,
     delete: deleteUser
   },
@@ -22,7 +23,9 @@ module.exports = {
     create: createEvaluations,
     get: getEvaluation,
     delete: deleteEvaluation
-  }
+  },
+
+  toBody: toBody
 
 };
 
@@ -35,7 +38,7 @@ var params =  {
   headers: { 'x-api-key': process.env.X_API_KEY }
 };
 
-function createUser() { return chakram.post(URL + '/users/', {}, params) };
+function createUser() { return chakram.post(URL + '/users/', { reputation: 0.2 }, params) };
 function getUser(id) { return chakram.get(URL + '/users/' + id, params) };
 function deleteUser(id) { return chakram.delete(URL + '/users/' + id, {}, params) };
 
@@ -47,6 +50,23 @@ function createContribution(body) { return chakram.post(URL + '/contributions/',
 function getContribution(id) { return chakram.get(URL + '/contributions/' + id, params) };
 function deleteContribution(id) { return chakram.delete(URL + '/contributions/' + id, {}, params) };
 
-function createEvaluations(body) { return chakram.post(URL + '/evaluations/', body, params) };
+function createEvaluations(body) { return chakram.post(URL + '/evaluations/submit', body, params) };
 function getEvaluation(id) { return chakram.get(URL + '/evaluations/' + id , params) };
 function deleteEvaluation(id) { return chakram.delete(URL + '/evaluations/' + id, {}, params) };
+
+function createUsers(n) {
+  var responses = [];
+  _.times(5, function(n) { 
+    responses.push(createUser());
+  });
+
+  return chakram.all(responses).then(toBodies);
+}
+
+function toBodies(xs) {
+  return _.map(xs, toBody);
+}
+
+function toBody(x) {
+  return x.body;
+}
