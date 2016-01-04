@@ -38,3 +38,6 @@ node_modules
 #SERVERLESS STUFF
 admin.env
 .env
+
+# local stuff for dev
+event.json
