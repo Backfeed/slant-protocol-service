@@ -17,14 +17,16 @@
       "Type": "String",
       "AllowedValues": [
         "development",
-        "v1"
+        "v1",
+        "beta"
       ]
     },
     "DataModelStage": {
       "Type": "String",
       "AllowedValues": [
         "development",
-        "v1"
+        "v1",
+        "beta"
       ]
     },
     "NotificationEmail": {
@@ -305,7 +307,7 @@
         },
         "GlobalSecondaryIndexes": [
           {
-            "IndexName": "evaluations-biddingId-userId-index",
+            "IndexName": "evaluations-biddingId-userId",
             "KeySchema": [
               {
                 "AttributeName": "biddingId",
@@ -329,7 +331,7 @@
             }
           },
           {
-            "IndexName": "contributionId-value-index",
+            "IndexName": "evaluations-contributionId-value",
             "KeySchema": [
               {
                 "AttributeName": "contributionId",
@@ -354,6 +356,82 @@
                 "Ref": "LowRWThroughput"
               }
             }
+          },
+          {
+            "IndexName": "evaluations-biddingId-value",
+            "KeySchema": [
+              {
+                "AttributeName": "biddingId",
+                "KeyType": "HASH"
+              },
+              {
+                "AttributeName": "value",
+                "KeyType": "RANGE"
+              }
+            ],
+            "Projection": {
+              "NonKeyAttributes": [
+                "userId",
+                "contributionId"
+              ],
+              "ProjectionType": "INCLUDE"
+            },
+            "ProvisionedThroughput": {
+              "ReadCapacityUnits": {
+                "Ref": "LowRWThroughput"
+              },
+              "WriteCapacityUnits": {
+                "Ref": "LowRWThroughput"
+              }
+            }
+          },
+          {
+            "IndexName": "evaluations-userId-createdAt",
+            "KeySchema": [
+              {
+                "AttributeName": "userId",
+                "KeyType": "HASH"
+              },
+              {
+                "AttributeName": "createdAt",
+                "KeyType": "RANGE"
+              }
+            ],
+            "Projection": {
+              "ProjectionType": "ALL"
+            },
+            "ProvisionedThroughput": {
+              "ReadCapacityUnits": {
+                "Ref": "LowRWThroughput"
+              },
+              "WriteCapacityUnits": {
+                "Ref": "LowRWThroughput"
+              }
+            }
+          },
+          {
+            "IndexName": "evaluations-contributionId-createdAt",
+            "KeySchema": [
+              {
+                "AttributeName": "contributionId",
+                "KeyType": "HASH"
+              },
+              {
+                "AttributeName": "createdAt",
+                "KeyType": "RANGE"
+              }
+            ],
+            "Projection": {
+              "ProjectionType": "ALL"
+            },
+            "ProvisionedThroughput": {
+              "ReadCapacityUnits": {
+                "Ref": "LowRWThroughput"
+              },
+              "WriteCapacityUnits": {
+                "Ref": "LowRWThroughput"
+              }
+            }
           }
         ]
       }
@@ -366,6 +444,18 @@
           {
             "AttributeName": "id",
             "AttributeType": "S"
+          },
+          {
+            "AttributeName": "biddingId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "userId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "createdAt",
+            "AttributeType": "N"
           }
         ],
         "KeySchema": [
@@ -395,7 +485,57 @@
               }
             ]
           ]
-        }
+        },
+        "GlobalSecondaryIndexes": [
+          {
+            "IndexName": "contributions-biddingId-createdAt",
+            "KeySchema": [
+              {
+                "AttributeName": "biddingId",
+                "KeyType": "HASH"
+              },
+              {
+                "AttributeName": "createdAt",
+                "KeyType": "RANGE"
+              }
+            ],
+            "Projection": {
+              "ProjectionType": "ALL"
+            },
+            "ProvisionedThroughput": {
+              "ReadCapacityUnits": {
+                "Ref": "LowRWThroughput"
+              },
+              "WriteCapacityUnits": {
+                "Ref": "LowRWThroughput"
+              }
+            }
+          },
+          {
+            "IndexName": "contributions-userId-createdAt",
+            "KeySchema": [
+              {
+                "AttributeName": "userId",
+                "KeyType": "HASH"
+              },
+              {
+                "AttributeName": "createdAt",
+                "KeyType": "RANGE"
+              }
+            ],
+            "Projection": {
+              "ProjectionType": "ALL"
+            },
+            "ProvisionedThroughput": {
+              "ReadCapacityUnits": {
+                "Ref": "LowRWThroughput"
+              },
+              "WriteCapacityUnits": {
+                "Ref": "LowRWThroughput"
+              }
+            }
+          }
+        ]
       }
     },
     "BiddingsDynamoDB": {
