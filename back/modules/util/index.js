@@ -4,14 +4,16 @@ var _ = require('underscore');
 var AWS = require('aws-sdk');
 var uuid = require('node-uuid');
 
-module.exports = {
+var util = {
   tables: getTables(),
   getCachedSystemRep: getCachedSystemRep,
   dynamoDoc: getDynamoDoc(),
   uuid: uuid.v4,
   sumRep: sumRep,
-  log: log
+  log: log  
 }
+
+module.exports = util;
 
 function log(prefix) {
 
