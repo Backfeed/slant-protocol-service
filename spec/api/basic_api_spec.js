@@ -18,19 +18,19 @@ var userData = {
 };
 var createUser = function() { return chakram.post(URL + '/users/', userData, params) };
 var getUser    = function(id) { return chakram.get(URL + '/users/' + id, params) };
-var deleteUser = function(id) { return chakram.get(URL + '/users/' + id, params) };
+var deleteUser = function(id) { return chakram.delete(URL + '/users/' + id, {}, params) };
 
 var createBidding = function() { return chakram.post(URL + '/biddings/', {}, params) };
-var getBidding    = function(id) { return chakram.post(URL + '/biddings/' + id, params) };
-var deleteBidding = function(id) { return chakram.post(URL + '/biddings/' + id, params) };
+var getBidding    = function(id) { return chakram.get(URL + '/biddings/' + id, params) };
+var deleteBidding = function(id) { return chakram.delete(URL + '/biddings/' + id, {}, params) };
 
 var createContribution = function(body) { return chakram.post(URL + '/contributions/', body, params) };
-var getContribution    = function(id) { return chakram.post(URL + '/contributions/' + id, params) };
-var deleteContribution = function(id) { return chakram.post(URL + '/contributions/' + id, params) };
+var getContribution    = function(id) { return chakram.get(URL + '/contributions/' + id, params) };
+var deleteContribution = function(id) { return chakram.delete(URL + '/contributions/' + id, {}, params) };
 
 var createEvaluations = function(body) { return chakram.post(URL + '/evaluations/', body, params) };
-var getEvaluation     = function(id) { return chakram.post(URL + '/evaluations/' + id , params) };
-var deleteEvaluation  = function(id) { return chakram.post(URL + '/evaluations/' + id, params) };
+var getEvaluation     = function(id) { return chakram.get(URL + '/evaluations/' + id , params) };
+var deleteEvaluation  = function(id) { return chakram.delete(URL + '/evaluations/' + id, {}, params) };
 
 describe("Slant Protocol API", function() {
 
@@ -38,11 +38,11 @@ describe("Slant Protocol API", function() {
     before("Initialize things for the tests", function () {
     });
 
-    it("should return 201 on success", function () {
+    xit("should return 201 on success", function () {
         return expect(createUser()).to.have.status(201);
     });
 
-    it("should return 200 when finding a user", function () {
+    xit("should return 200 when finding a user", function () {
         return expect(getUser(userId)).to.have.status(200);
     });
 
@@ -132,7 +132,7 @@ describe("Slant Protocol API", function() {
             multipleResponses.push(createEvaluations({ 'userId': george.id, 'biddingId': abbey.id, evaluations: [{ 'contributionId': something.id, 'value': 1}] }));
             return chakram.all(multipleResponses).then(function(responses) {
                 var evaluations = responses.map(function(response) {
-                    console.log(response.body);
+                    //console.log(response.body);
                     return response.body;
                 });
                 expect(evaluations[0]).to.be.a('object');
@@ -144,11 +144,20 @@ describe("Slant Protocol API", function() {
 
         });
 
-        after("Cleaning things up", function () {
-            deleteUser(george.id);
-            deleteUser(paul.id);
+       it("should clean things up", function () {
+            deleteUser(george.id).then(function(res) {
+                //console.log(res.body);
+                expect(res.body.id).to.be.equal(george.id);
+                return chakram.wait();
+            });
+            deleteUser(paul.id).then(function(res) {
+                //console.log(res.body);
+                expect(res.body.id).to.be.equal(paul.id);
+                return chakram.wait();
+            });
             deleteUser(john.id);
             deleteUser(ringo.id);
+            deleteUser(pete.id);
             deleteBidding(abbey.id);
             deleteBidding(white.id);
             deleteBidding(revolver.id);
