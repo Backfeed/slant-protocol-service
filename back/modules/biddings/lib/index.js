@@ -24,7 +24,7 @@ function createBidding(event, cb) {
   };
 
   var params = {
-    TableName : util.tables.bidding,
+    TableName : util.tables.biddings,
     Item: newBidding
   };
 
@@ -37,7 +37,7 @@ function createBidding(event, cb) {
 function getBidding(event, cb) {
 
   var params = {
-    TableName : util.tables.bidding,
+    TableName : util.tables.biddings,
     Key: { id: event.id }
   };
 
@@ -289,7 +289,7 @@ function endBidding(event, cb) {
 function deleteBidding(event, cb) {
 
   var params = {
-    TableName : util.tables.bidding,
+    TableName : util.tables.biddings,
     Key: { id: event.id },
     ReturnValues: 'ALL_OLD'
   };
@@ -320,7 +320,7 @@ function getWinningContribution(contributionId) {
 
 function endBiddingInDb(id, winningContributionId, cb) {
   var params = {
-    TableName: util.tables.bidding,
+    TableName: util.tables.biddings,
     Key: { id: id },
     UpdateExpression: 'set #sta = :s, #win = :w, #end = :e',
     ExpressionAttributeNames: {
