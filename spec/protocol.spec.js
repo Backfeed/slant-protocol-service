@@ -17,6 +17,7 @@ describe("Test protocol according to excel", function() {
     var arr = [];
 
     // TODO :: delete DB before anything!
+    // TODO :: cache total users rep
 
     arr.push(util.user.createN(5));
     arr.push(util.bidding.create());
@@ -51,7 +52,8 @@ describe("Test protocol according to excel", function() {
       })
       .then(function(res) {
         p1 = res.body;
-        expect(p1.reputation).to.be.equal(0.198920125174837);
+
+        expect(util.pp(p1.reputation)).to.be.equal(0.1976757815);
         return chakram.wait();
       });
 

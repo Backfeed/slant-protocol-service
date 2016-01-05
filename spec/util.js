@@ -25,7 +25,8 @@ module.exports = {
     delete: deleteEvaluation
   },
 
-  toBody: toBody
+  toBody: toBody,
+  pp: parseRep
 
 };
 
@@ -69,4 +70,8 @@ function toBodies(xs) {
 
 function toBody(x) {
   return x.body;
+}
+
+function parseRep(n) {
+  return parseFloat(n.toFixed(10));
 }
