@@ -11,13 +11,13 @@
       "eventSourceArn": "",
       "endpoints": [
         {
-          "path": "users/createuser",
+          "path": "users",
           "method": "POST",
           "authorizationType": "none",
           "apiKeyRequired": true,
           "requestParameters": {},
           "requestTemplates": {
-            "application/json": ""
+            "application/json": "$input.json('$')"
           },
           "responses": {
             "400": {
