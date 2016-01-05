@@ -23,10 +23,10 @@
         "restApiId": "czbcd3bnlj"
       }
     ],
-    "beta": [
+    "v1p1": [
       {
         "region": "us-east-1",
-        "iamRoleArnLambda": "arn:aws:iam::051563103010:role/slant-beta-r-IamRoleLambda-MEM4CFXP2XKK",
+        "iamRoleArnLambda": "arn:aws:iam::051563103010:role/slant-v1p1-r-IamRoleLambda-1WPD96OBCMWK5",
         "regionBucket": "serverless.useast1.backfeed.cc",
         "restApiId": "czbcd3bnlj"
       }

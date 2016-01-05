@@ -18,7 +18,7 @@
       "AllowedValues": [
         "development",
         "v1",
-        "beta"
+        "v1p1"
       ]
     },
     "DataModelStage": {
@@ -26,7 +26,7 @@
       "AllowedValues": [
         "development",
         "v1",
-        "beta"
+        "v1p1"
       ]
     },
     "NotificationEmail": {
