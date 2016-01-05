@@ -14,18 +14,23 @@ var async = require('async');
 var util  = require('../../util');
 
 function createUser(event, cb) {
-  var rep = event.reputation || 11;
-  var tokens = event.tokens;
-  async.parallel({
-    newUser: function(parallelCB) {
-      putNewUserInDb(rep, tokens, parallelCB);
-    },
-    totalRep: function(parallelCB) {
-      addToCachedRep(rep, parallelCB);
-    }
-  }, function(err, results) {
-    return cb(err, results.newUser);
+  var newUser = {
+    "id": util.uuid(),
+    "tokens": event.tokens || parseFloat(process.env.USER_INITIAL_TOKENS),
+    "reputation": event.reputation || parseFloat(process.env.USER_INITIAL_REPUTATION),
+    "biddingCount": 0,
+    "createdAt": Date.now()
+  };
+
+  var params = {
+    TableName : util.tables.users,
+    Item: newUser
+  };
+
+  util.dynamoDoc.put(params, function(err, data) {
+    return cb(err, newUser);
   });
+
 }
 
 function getUser(event, cb) {
@@ -108,39 +113,5 @@ function updateUser(event, cb) {
 
   return util.dynamoDoc.update(params, function(err, data) {
     return cb(err, data.Attributes);
-  });
-}
-
-function putNewUserInDb(rep, tokens, cb) {
-  var newUser = {
-    "id": util.uuid(),
-    "tokens": tokens,
-    "reputation": rep,
-    "biddingCount": 0,
-    "createdAt": Date.now()
-  };
-
-  var params = {
-    TableName : util.tables.users,
-    Item: newUser
-  };
-
-  util.dynamoDoc.put(params, function(err, data) {
-    return cb(err, newUser);
-  });
-}
-
-function addToCachedRep(rep, cb) {
-  var params = {
-    TableName: util.tables.caching,
-    Key: { type: "totalRepInSystem" },
-    UpdateExpression: 'set #val = #val + :v',
-    ExpressionAttributeNames: { '#val' : 'theValue' },
-    ExpressionAttributeValues: { ':v' : rep },
-    ReturnValues: 'NONE'
-  };
-
-  return util.dynamoDoc.update(params, function(err, data) {
-    return cb(err, null);
   });
 }

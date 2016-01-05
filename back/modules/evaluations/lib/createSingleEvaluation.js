@@ -42,6 +42,7 @@ module.exports.execute = function(event, cb) {
       },
         function(err, results) {
           totalRepInSystem = results.totalRepInSystem;
+          log('totalRepInSystem', totalRepInSystem);
           formerEvaluations = results.evaluations;
 
           var currentUserFormerEvaluation = _.findWhere(formerEvaluations, { userId: event.userId });
@@ -73,27 +74,12 @@ module.exports.execute = function(event, cb) {
       currentUserRep = currentUser.reputation;
       totalContributionRep = util.sumRep(evaluators);
       log("totalContributionRep", totalContributionRep);
+      console.log('rep1', evaluators[currentUserRep]);
       evaluators = updateEvaluatorsRepForSameVoters(evaluators, currentUserRep, totalRepInSystem, totalContributionRep, totalVoteRep, event.value, event.userId);
+      console.log('rep2', evaluators[currentUserRep]);
       evaluators = updateEvaluatorsRep(evaluators, currentUserRep, totalRepInSystem);
-
-      async.parallel({
-        updateEvaluatorsRepToDb: function(parallelCB) {
-          updateEvaluatorsRepToDb(evaluators, parallelCB);
-        },
-        cacheNewTotalRepToDb: function(parallelCB) {
-          cacheNewTotalReputationToDb(evaluators, parallelCB);
-        }
-      },
-        function(err, results) {
-          if (err) { log('err', err); } 
-          else {     log('results', results); }
-
-          var endTime = new Date().getTime();
-          log('total time', endTime - startTime);
-          return cb(err, 'done');
-        }
-      );
-      
+      console.log('rep3', evaluators[currentUserRep]);
+      updateEvaluatorsRepToDb(evaluators, cb);
     }
 
   ]);
