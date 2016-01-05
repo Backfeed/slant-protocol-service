@@ -35,7 +35,7 @@ module.exports = {
 var _ = require('underscore');
 var chakram = require('chakram');
 
-var URL = 'https://api.backfeed.cc/slantdev';
+var URL = 'https://api.backfeed.cc/1.1';
 
 var params =  {
   headers: { 'x-api-key': process.env.X_API_KEY }
@@ -59,7 +59,7 @@ function deleteEvaluation(id) { return chakram.delete(URL + '/evaluations/' + id
 
 function createUsers(n) {
   var responses = [];
-  _.times(5, function(n) { 
+  _.times(5, function(n) {
     responses.push(createUser());
   });
 
