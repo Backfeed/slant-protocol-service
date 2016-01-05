@@ -4,14 +4,15 @@ module.exports = {
   cleanseDb: cleanseDb,
   syncCachedSystemRep: syncCachedSystemRep,
   cacheTotalUsersRep: cacheTotalUsersRep,
-  cacheTotalRep: cacheTotalRep
+  addToCachedRep: addToCachedRep,
+  updateCachedRep: updateCachedRep
 }
 
 var _    = require('underscore');
 var async = require('async');
 var util = require('../');
 
-function cacheTotalRep(event, cb) {
+function updateCachedRep(event, cb) {
 
   var params = {
     TableName: util.tables.caching,
@@ -28,6 +29,21 @@ function cacheTotalRep(event, cb) {
 
 }
 
+function addToCachedRep(reputation, cb) {
+  var params = {
+    TableName: util.tables.caching,
+    Key: { type: "totalRepInSystem" },
+    UpdateExpression: 'set #val = #val + :v',
+    ExpressionAttributeNames: { '#val' : 'theValue' },
+    ExpressionAttributeValues: { ':v' : reputation },
+    ReturnValues: 'ALL_NEW'
+  };
+
+  return util.dynamoDoc.update(params, function(err, data) {
+    return cb(err, data.Attributes.theValue);
+  });
+}
+
 function cacheTotalUsersRep(event, cb) {
 
   var paramsForQueringUsers = {
@@ -40,13 +56,32 @@ function cacheTotalUsersRep(event, cb) {
   util.dynamoDoc.scan(paramsForQueringUsers, function(err, data) {
     if (err) return cb(err);
     var totalRep = util.sumRep(data.Items);
-    cacheTotalRep({ reputation: totalRep }, cb);
+    updateCachedRep({ reputation: totalRep }, cb);
   });
   
 }
 
+// This function gets called whenever there1's a change on users table
 function syncCachedSystemRep(event, cb) {
-  return cb(event);
+  var repToAdd = 0;
+  var temp;
+  var temp2;
+  _.each(event.Records, function(record) {
+    if (record.eventName === 'REMOVE') {
+      temp = record.dynamodb.OldImage.reputation;
+      repToAdd -= parseFloat(temp.N || temp.S);
+
+    } else if (record.eventName === 'INSERT') {
+      temp = record.dynamodb.NewImage.reputation;
+      repToAdd += parseFloat(temp.N || temp.S);
+    } else {
+      temp = record.dynamodb.NewImage.reputation;
+      temp2 = record.dynamodb.OldImage.reputation;
+      repToAdd += parseFloat(temp.N || temp.S) - parseFloat(temp2.N || temp2.S);
+    }
+  });
+  console.log('repToAdd', repToAdd);
+  return addToCachedRep(repToAdd, cb);
 }
 
 function cleanseDb(event, cb) {

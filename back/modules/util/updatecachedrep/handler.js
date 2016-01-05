@@ -15,7 +15,8 @@ var lib = require('../lib');
 
 // Lambda Handler
 module.exports.handler = function(event, context) {
-  lib.syncCachedSystemRep(event, function(error, response) {
+
+  lib.updateCachedRep(event, function(error, response) {
     return context.done(error, response);
   });
 };
