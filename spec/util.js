@@ -25,6 +25,8 @@ module.exports = {
     delete: deleteEvaluation
   },
 
+  cleanseDB: cleanseDB,
+
   toBody: toBody,
   pp: parseRep
 
@@ -39,7 +41,7 @@ var params =  {
   headers: { 'x-api-key': process.env.X_API_KEY }
 };
 
-function createUser() { return chakram.post(URL + '/users/', { reputation: 0.2 }, params) };
+function createUser() { return chakram.post(URL + '/users/', {}, params) };
 function getUser(id) { return chakram.get(URL + '/users/' + id, params) };
 function deleteUser(id) { return chakram.delete(URL + '/users/' + id, {}, params) };
 
@@ -62,6 +64,10 @@ function createUsers(n) {
   });
 
   return chakram.all(responses).then(toBodies);
+}
+
+function cleanseDB() {
+  return chakram.delete(URL + '/util/cleansedb', {}, params);
 }
 
 function toBodies(xs) {
