@@ -12,9 +12,9 @@
       "endpoints": [
         {
           "path": "util/cleansedb",
-          "method": "GET",
+          "method": "DELETE",
           "authorizationType": "none",
-          "apiKeyRequired": false,
+          "apiKeyRequired": true,
           "requestParameters": {},
           "requestTemplates": {
             "application/json": ""

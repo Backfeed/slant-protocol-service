@@ -14,7 +14,7 @@
           "path": "evaluations/createsingeevaluati",
           "method": "GET",
           "authorizationType": "none",
-          "apiKeyRequired": false,
+          "apiKeyRequired": true,
           "requestParameters": {},
           "requestTemplates": {
             "application/json": ""

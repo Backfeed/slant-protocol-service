@@ -12,9 +12,9 @@
       "endpoints": [
         {
           "path": "util/cachetotalusersrep",
-          "method": "GET",
+          "method": "PUT",
           "authorizationType": "none",
-          "apiKeyRequired": false,
+          "apiKeyRequired": true,
           "requestParameters": {},
           "requestTemplates": {
             "application/json": ""
