@@ -179,7 +179,7 @@ function cacheNewTotalReputationToDb(evaluators, callback) {
 function getEvaluations(contributionId, cb) {
   var paramsForQueringEvaluations = {
     TableName : util.tables.evaluations,
-    IndexName: 'contributionId-index',
+    IndexName: 'evaluations-contributionId-createdAt',
     KeyConditionExpression: 'contributionId = :hkey',
     ExpressionAttributeValues: { ':hkey': contributionId }
   };

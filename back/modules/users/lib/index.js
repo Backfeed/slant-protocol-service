@@ -52,7 +52,7 @@ function getUser(event, cb) {
 function getUserEvaluations(event, cb) {
   var params = {
     TableName : util.tables.evaluations,
-    IndexName: 'userId-index',
+    IndexName: 'evaluations-userId-createdAt',
     KeyConditionExpression: 'userId = :hkey',
     ExpressionAttributeValues: { ':hkey': event.id }
   };

@@ -52,7 +52,7 @@ function getContributionEvaluations(event, cb) {
 
   var params = {
     TableName : util.tables.evaluations,
-    IndexName: 'contributionId-index',
+    IndexName: 'evaluations-contributionId-createdAt',
     KeyConditionExpression: 'contributionId = :hkey',
     ExpressionAttributeValues: { ':hkey': event.id }
   };

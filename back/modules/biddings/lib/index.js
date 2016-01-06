@@ -116,7 +116,7 @@ function getUserRep(users, userId) {
 function getPositiveEvaluationsByBiddingId(biddingId, callback) {
   var params = {
     TableName : util.tables.evaluations,
-    IndexName: 'biddingId-value-index',
+    IndexName: 'evaluations-biddingId-value',
     ExpressionAttributeNames: { '#v': 'value' }, // Need to do this since 'value' is a resevred dynamoDB word
     KeyConditionExpression: 'biddingId = :bkey and #v = :v',
     ExpressionAttributeValues: {
@@ -188,7 +188,7 @@ function getContributions(event, cb) {
 
   var params = {
     TableName : util.tables.contributions,
-    IndexName: 'biddingId-index',
+    IndexName: 'contributions-biddingId-createdAt',
     KeyConditionExpression: 'biddingId = :hkey',
     ExpressionAttributeValues: { ':hkey': event.id }
   };
@@ -221,7 +221,7 @@ function getUserEvaluations(event, cb) {
 
   var params = {
     TableName : util.tables.evaluations,
-    IndexName: 'evaluations-biddingId-userId-index',
+    IndexName: 'evaluations-biddingId-userId',
     KeyConditionExpression: 'biddingId = :hkey and userId = :rkey',
     ExpressionAttributeValues: {
       ':hkey': event.id,
