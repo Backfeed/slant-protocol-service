@@ -12,13 +12,14 @@
     "ProjectDomain": {
       "Type": "String",
       "Default": "backfeed.cc"
-    },
+    },  
     "Stage": {
       "Type": "String",
       "AllowedValues": [
         "development",
         "v1",
-        "v1p1"
+        "v1p1",
+        "dev"
       ]
     },
     "DataModelStage": {
@@ -26,7 +27,8 @@
       "AllowedValues": [
         "development",
         "v1",
-        "v1p1"
+        "v1p1",
+        "dev"
       ]
     },
     "NotificationEmail": {

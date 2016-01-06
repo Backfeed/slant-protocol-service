@@ -30,6 +30,14 @@
         "regionBucket": "serverless.useast1.backfeed.cc",
         "restApiId": "czbcd3bnlj"
       }
+    ],
+    "dev": [
+      {
+        "region": "us-east-1",
+        "iamRoleArnLambda": "arn:aws:iam::051563103010:role/slant-dev-r-IamRoleLambda-1O6SOJS3V9Z74",
+        "regionBucket": "serverless.useast1.backfeed.cc",
+        "restApiId": "czbcd3bnlj"
+      }
     ]
   },
   "custom": {},
