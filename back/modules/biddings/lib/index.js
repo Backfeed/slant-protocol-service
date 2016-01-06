@@ -299,7 +299,7 @@ function deleteBidding(event, cb) {
       err = '404:Resource not found.';
       return cb(err);
     }
-    return cb(err, data);
+    return cb(err, data.Attributes);
   });
 
 }

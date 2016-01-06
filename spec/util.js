@@ -28,6 +28,7 @@ module.exports = {
   cleanseDB: cleanseDB,
 
   toBody: toBody,
+  toBodies: toBodies,
   pp: parseRep
 
 };
