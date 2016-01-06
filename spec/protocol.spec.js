@@ -15,7 +15,7 @@ describe("Test protocol according to excel", function() {
   var arr = [];
 
   before(function() {
-    util.cleanseDB()
+    return util.cleanseDB()
       .then(function(res) {
         arr.push(util.user.createN(5));
         arr.push(util.bidding.create());
@@ -30,13 +30,14 @@ describe("Test protocol according to excel", function() {
         p3 = users[2];
         p4 = users[3];
         p5 = users[4];
-        console.log('users', users);
-        console.log('biddingId', biddingId);
+        return chakram.wait();
       });
   });
 
   after(function() {
-    util.cleanseDB();
+    return util.cleanseDB().then(function(res) {
+      return chakram.wait();
+    });
   });
   
   it("should cost tokens for submitting a contribution", function () {
@@ -51,25 +52,25 @@ describe("Test protocol according to excel", function() {
       })
       .then(function(res) {
         p1 = res.body;
-        expect(p1.tokens).should.equal(5) // TODO :: change for real value after reponse from protocol guys
+        expect(p1.tokens).to.be.equal(11) // TODO :: change for real value after reponse from protocol guys
         return chakram.wait();
       });
   });
 
   it("should burn rep to submit an evaluation", function() {
     return util.evaluation.create({ 
-      biddingId: biddingId,
-      userId: p1.id,
-      evaluations: [{ contributionId: contributionId1, value: 1 }]
-    })
-    .then(function(res) {
-      return util.user.get(p1.id);
-    })
-    .then(function(res) {
-      p1 = res.body;
-      expect(util.pp(p1.reputation)).to.be.equal(0.1976757815);
-      return chakram.wait();
-    });
+        biddingId: biddingId,
+        userId: p1.id,
+        evaluations: [{ contributionId: contributionId1, value: 1 }]
+      })
+      .then(function(res) {
+        return util.user.get(p1.id);
+      })
+      .then(function(res) {
+        p1 = res.body;
+        expect(util.pp(p1.reputation)).to.be.equal(0.1976757815);
+        return chakram.wait();
+      });
   });
 
 });
