@@ -36,7 +36,7 @@ module.exports = {
 var _ = require('underscore');
 var chakram = require('chakram');
 
-var URL = 'https://api.backfeed.cc/1.1';
+var URL = 'https://api.backfeed.cc/dev';
 
 var params =  {
   headers: { 'x-api-key': process.env.X_API_KEY }
