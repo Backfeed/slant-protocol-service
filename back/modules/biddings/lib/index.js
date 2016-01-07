@@ -62,6 +62,9 @@ function getBiddingWithLeadingContribution(event, cb) {
   },
     function(err, results) {
       var bidding = results.bidding;
+      if (_.isEmpty(bidding)) {
+        return cb(err);
+      }
       bidding.winningContributionId = results.winningContribution.id;
       bidding.winningContributionScore = results.winningContribution.score;
       cb(err, bidding);
