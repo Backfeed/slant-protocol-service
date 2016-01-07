@@ -63,7 +63,7 @@ describe("Slant Protocol API", function() {
         expect(george.createdAt).to.be.a('number');
         expect(paul.tokens).to.equal(11);
         expect(john.id).to.have.length.above(2);
-        expect(ringo.reputation).to.equal(11);
+        expect(ringo.reputation).to.equal(0.2);
         //console.log(paul);
       });
     });
