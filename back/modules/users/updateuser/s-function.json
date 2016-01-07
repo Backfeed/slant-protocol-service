@@ -16,7 +16,7 @@
           "authorizationType": "none",
           "apiKeyRequired": true,
           "requestParameters": {
-            "integration.request.querystring.id": "method.request.querystring.id"
+            "integration.request.path.id": "method.request.path.id"
           },
           "requestTemplates": {
             "application/json": "{\"id\":\"$input.params('id')\", \"body\" : $input.json('$')}"
