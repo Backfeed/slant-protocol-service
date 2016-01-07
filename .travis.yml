@@ -16,4 +16,4 @@ branches:
   only:
     - dev
 script:
-  - npm start
+  - npm run test

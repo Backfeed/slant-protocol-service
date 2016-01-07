@@ -3,8 +3,9 @@
   "version": "0.0.1",
   "description": "A Backfeed Protocol for Slant",
   "scripts": {
-    "test": "mocha spec/**/*.spec.js -w",
-    "start": "npm run test"
+    "test": "mocha spec/**/*.spec.js",
+    "localtest": "mocha spec/**/*.spec.js -w",
+    "start": "npm run localtest"
   },
   "repository": {
     "type": "git",
