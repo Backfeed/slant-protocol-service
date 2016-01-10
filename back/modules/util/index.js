@@ -1,5 +1,9 @@
 'use strict';
 
+var _        = require('underscore');
+var AWS      = require('aws-sdk');
+var uuid     = require('node-uuid');
+var math     = require('mathjs');
 var winston  = require('winston');
 
 winston.add(winston.transports.Loggly, {

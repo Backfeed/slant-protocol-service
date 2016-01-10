@@ -8,7 +8,6 @@ module.exports = {
   updateCachedRep: updateCachedRep
 };
 
-var nr       = require('newrelic');
 var _        = require('underscore');
 var async    = require('async');
 var util     = require('../');
