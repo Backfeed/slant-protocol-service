@@ -7,7 +7,7 @@ var math = require('mathjs');
 
 var util = {
   tables: getTables(),
-  getCachedSystemRep: getCachedSystemRep,
+  getCachedRep: getCachedRep,
   dynamoDoc: getDynamoDoc(),
   uuid: uuid.v4,
   sumRep: sumRep,
@@ -56,7 +56,7 @@ function sumRep(users) {
   }, 0);
 }
 
-function getCachedSystemRep(cb) {
+function getCachedRep(cb) {
 
   var params = {
     TableName : util.tables.caching,

@@ -34,7 +34,7 @@ module.exports.execute = function(event, cb) {
 
       async.parallel({
         totalRepInSystem: function(parallelCB) {
-          util.getCachedSystemRep(parallelCB);
+          util.getCachedRep(parallelCB);
         },
         evaluations: function(parallelCB) {
           getEvaluations(event.contributionId, parallelCB);
