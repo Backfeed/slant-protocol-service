@@ -30,13 +30,12 @@ function updateCachedRep(event, cb) {
 }
 
 function addToCachedRep(reputation, cb) {
-  console.log('addToCachedRep before parse', reputation);
   var params = {
     TableName: util.tables.caching,
     Key: { type: "totalRepInSystem" },
     UpdateExpression: 'set #val = #val + :v',
     ExpressionAttributeNames: { '#val' : 'theValue' },
-    ExpressionAttributeValues: { ':v' : util.math.round(reputation, 5) },
+    ExpressionAttributeValues: { ':v' : reputation },
     ReturnValues: 'ALL_NEW'
   };
 
@@ -82,9 +81,6 @@ function syncCachedSystemRep(event, cb) {
       var newV = util.math.eval(temp.N || temp.S);
       repToAdd = util.math.add(repToAdd, util.math.subtract(newV, oldV));
     }
-    console.log('repToAdd before parse', repToAdd);
-    repToAdd = util.math.round(repToAdd, 5);
-    console.log('repToAdd after parse', repToAdd);
   });
   return addToCachedRep(repToAdd, cb);
 }
@@ -149,7 +145,6 @@ function getAllItemsFromDb(table, cb) {
   };
   
   util.dynamoDoc.scan(paramsForQueringUsers, function(err, data) {
-    console.log('err', err, 'data', data);
     if (err) return cb(err);
     cb(err, data.Items);
   });

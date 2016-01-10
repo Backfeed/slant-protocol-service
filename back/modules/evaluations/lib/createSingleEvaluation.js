@@ -5,7 +5,6 @@ var _    = require('underscore');
 var async = require('async');
 var util = require('../../util');
 var Immutable = require('immutable');
-var immutableMap = Immutable.Map({ totalEvaluatorsRepBefore: 0 });
 var log = util.log('CREATE SINGLE');
 
 var stake = 0.05;
@@ -15,25 +14,26 @@ var beta = 0.7;
 // Lambda Handler
 module.exports.execute = function(event, cb) {
 
+  log('event', event);
+
+  var iMap = Immutable.Map({ 
+    newRep: 0,
+    voteRep: 0,
+    contributionRep: 0,
+    systemRep: 0
+  });
+
   var startTime = new Date().getTime();
 
-  log('event', event);
-  var currentUser;
-  var currentUserRep;
-  var formerEvaluations;
   var evaluations;
   var evaluators;
-  var evaluatorsWhoVotedSame;
-  var totalVoteRep;
-  var totalRepInSystem;
-  var totalContributionRep;
 
   async.waterfall([
 
     function(waterfallCB) {
 
       async.parallel({
-        totalRepInSystem: function(parallelCB) {
+        systemRep: function(parallelCB) {
           util.getCachedRep(parallelCB);
         },
         evaluations: function(parallelCB) {
@@ -41,24 +41,26 @@ module.exports.execute = function(event, cb) {
         }
       },
         function(err, results) {
-          totalRepInSystem = results.totalRepInSystem;
-          log('totalRepInSystem', totalRepInSystem);
-          formerEvaluations = results.evaluations;
+          iMap = iMap.set('systemRep', results.systemRep);
+          log('systemRep', iMap.get('systemRep'));
+          evaluations = results.evaluations;
 
-          var currentUserFormerEvaluation = _.findWhere(formerEvaluations, { userId: event.userId });
+          var currentUserFormerEvaluation = _.findWhere(evaluations, { userId: event.userId });
 
           if (!!currentUserFormerEvaluation) {
+
             if (currentUserFormerEvaluation.value === event.value) {
-              return cb(new Error('400: bad request. evalaution with same value exists'));
-              log('currentUser already evaluated this contribution, removing his vote');
+              return cb(new Error('400: bad request. current user already evaluated this contribution with this value'));
             }
-            formerEvaluations = _.reject(formerEvaluations, function(e) {
+
+            log('current user already evaluated this contribution, removing his vote');
+            evaluations = _.reject(evaluations, function(e) {
               return e.userId === event.userId;
             });
+
           }
 
-          formerEvaluations.push(event);
-          evaluations = formerEvaluations;
+          evaluations.push(event);
           log('evaluations', evaluations);
           getEvaluators(evaluations, waterfallCB);
         }
@@ -69,20 +71,19 @@ module.exports.execute = function(event, cb) {
     function(result, waterfallCB) {
       evaluators = result;
       log('evaluators', evaluators);
-      immutableMap = immutableMap.set('totalEvaluatorsRepBefore', util.sumRep(evaluators));
-      
       evaluators = addVoteValueToEvaluators(evaluators, evaluations);
-      totalVoteRep = getTotalEvaluatorsWhoVotedSameRep(evaluators, event.value);
-      currentUser = getCurrentUserFrom(evaluators, event.userId);
-      currentUserRep = currentUser.reputation;
-      totalContributionRep = util.sumRep(evaluators);
-      log("totalContributionRep", totalContributionRep);
+      iMap = iMap.set('newRep', getCurrentUserFrom(evaluators, event.userId).reputation);
+      iMap = iMap.set('voteRep', getVoteRep(evaluators, event.value));
+      iMap = iMap.set('contributionRep', util.sumRep(evaluators));
+
       console.log('rep1', evaluators);
-      currentUserRep = burnStakeForCurrentUser(currentUserRep);
-      evaluators = updateEvaluatorsRepForSameVoters(evaluators, currentUserRep, totalRepInSystem, totalContributionRep, totalVoteRep, event.value, event.userId);
+
+      evaluators = updateSameEvaluatorsRep(evaluators, iMap.get('newRep'), iMap.get('systemRep'), iMap.get('contributionRep'), iMap.get('voteRep'), event.value, event.userId);
       console.log('rep2', evaluators);
-      evaluators = updateEvaluatorsRep(evaluators, currentUserRep, totalRepInSystem);
+
+      evaluators = updateEvaluatorsRep(evaluators, iMap.get('newRep'), iMap.get('systemRep'));
       console.log('rep3', evaluators);
+
       updateEvaluatorsRepToDb(evaluators, cb);
     }
 
@@ -90,31 +91,52 @@ module.exports.execute = function(event, cb) {
 
 }
 
-function updateEvaluatorsRep(evaluators, currentUserRep, totalRepInSystem) {
-  var leakageFactor = util.math.pow(util.math.divide(currentUserRep/totalRepInSystem), beta);
-
+function updateEvaluatorsRep(evaluators, currentUserRep, systemRep) {
+  var factor = util.math.pow(util.math.divide(currentUserRep, systemRep), beta);
+  var toDivide;
   return _.map(evaluators, function(evaluator) {
-    evaluator.reputation /= util.math.chain(1)
-                                      .subtract(stake)
-                                      .multiply(leakageFactor)
-                                      .done();
+    toDivide = util.math.chain(1)
+                          .subtract(util.math.multiply(stake, factor))
+                          .round(util.toRound)
+                          .done();
+    evaluator.reputation = util.math.divide(evaluator.reputation, toDivide);
 
     return evaluator;
   });
 }
 
-function updateEvaluatorsRepForSameVoters(evaluators, currentUserRep, totalRepInSystem, totalContributionRep, totalVoteRep, currentEvaluationValue, currentUserId) {
+function updateSameEvaluatorsRep(evaluators, newRep, systemRep, contributionRep, voteRep, currentEvaluationValue, currentUserId) {
   var toAdd;
+  var factor = util.math.pow(util.math.divide(contributionRep, systemRep), alpha);
   return _.map(evaluators, function(evaluator) {
-    if ( evaluator.value === currentEvaluationValue ) {
-      toAdd = util.math.chain(currentUserRep)
+
+    if ( evaluator.id === currentUserId ) {
+      toAdd = util.math.chain(newRep)
                         .multiply(stake)
-                        .multiply(util.math.pow(totalContributionRep/totalRepInSystem, alpha))
+                        .multiply(factor)
                         .multiply(evaluator.reputation)
-                        .divide(totalVoteRep)
+                        .divide(voteRep)
+                        .round(util.toRound)
+                        .done();
+
+      evaluator.reputation = util.math.add(burnStakeForCurrentUser(newRep), toAdd);
+      console.log('toAdd', toAdd)
+      console.log('evaluator.reputation', evaluator.reputation)
+    }
+
+    else if ( evaluator.value === currentEvaluationValue ) {
+      toAdd = util.math.chain(newRep)
+                        .multiply(stake)
+                        .multiply(factor)
+                        .multiply(evaluator.reputation)
+                        .divide(voteRep)
+                        .round(util.toRound)
                         .done();
       evaluator.reputation = util.math.add(evaluator.reputation, toAdd);
+      console.log('evaluator.reputation', evaluator.reputation)
     }
+
+
     return evaluator;
   });
 }
@@ -129,7 +151,7 @@ function addVoteValueToEvaluators(evaluators, evaluations) {
   });
 }
 
-function getTotalEvaluatorsWhoVotedSameRep(evaluators, value) {
+function getVoteRep(evaluators, value) {
   var toAdd = 0;
   return _.reduce(evaluators, function(memo, evaluator) {
     toAdd = evaluator.value === value ? evaluator.reputation : 0;
@@ -200,7 +222,6 @@ function getEvaluators(evaluations, cb) {
 }
 
 function burnStakeForCurrentUser(currentUserRep) {
-  return util.math.chain(currentUserRep)
-                    .multiply(util.math.subtract(1, stake))
-                    .done();
+  var toMultiply = util.math.subtract(1, stake);
+  return util.math.multiply(currentUserRep, toMultiply);
 }

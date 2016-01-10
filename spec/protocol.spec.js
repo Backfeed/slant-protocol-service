@@ -7,7 +7,7 @@ expect = chakram.expect;
 
 var util = require('./util.js');
 
-describe("Test protocol according to excel", function() {
+describe.only("Test protocol according to excel", function() {
   var biddingId;
   var contributionId1;
   var contributionId2;
@@ -22,6 +22,7 @@ describe("Test protocol according to excel", function() {
         return chakram.all(arr);
       })
       .then(function(res) {
+        console.log(res)
         arr = [];
         var users = res[0];
         biddingId = res[1].body.id;
@@ -68,7 +69,10 @@ describe("Test protocol according to excel", function() {
       })
       .then(function(res) {
         p1 = res.body;
-        expect(util.pp(p1.reputation)).to.be.equal(0.1976757815);
+        expect(util.pp(p1.reputation)).to.be.equal(0.197676);
+        return util.getCachedRep()
+      }).then(function(res) {
+        expect(util.pp(res.body)).to.be.equal(0.997676);
         return chakram.wait();
       });
   });

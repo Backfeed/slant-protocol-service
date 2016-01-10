@@ -26,10 +26,11 @@ module.exports = {
   },
 
   cleanseDB: cleanseDB,
+  getCachedRep: getCachedRep,
 
   toBody: toBody,
   toBodies: toBodies,
-  pp: parseRep,
+  pp: parseProtocol,
 
   math: math
 
@@ -61,6 +62,8 @@ function createEvaluations(body) { return chakram.post(URL + '/evaluations/submi
 function getEvaluation(id) { return chakram.get(URL + '/evaluations/' + id , params) };
 function deleteEvaluation(id) { return chakram.delete(URL + '/evaluations/' + id, {}, params) };
 
+function getCachedRep() { return chakram.get(URL + '/util/getcachedrep/', {}, params) }
+
 function createUsers(n) {
   var responses = [];
   _.times(5, function(n) {
@@ -82,6 +85,6 @@ function toBody(x) {
   return x.body;
 }
 
-function parseRep(n) {
-  return math.round(n, 10);
+function parseProtocol(n) {
+  return math.round(n, math.eval(process.env.ROUND_TO));
 }
