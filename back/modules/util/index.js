@@ -1,10 +1,13 @@
 'use strict';
 
-var _ = require('underscore');
-var AWS = require('aws-sdk');
-var uuid = require('node-uuid');
-var math = require('mathjs');
-var toRound = math.eval(process.env.ROUND_TO);
+var winston  = require('winston');
+
+winston.add(winston.transports.Loggly, {
+  inputToken: "58eb8773-b227-496a-916b-bc5f48653382",
+  subdomain: "jankei",
+  tags: ["Winston-NodeJS"],
+  json:true
+});
 
 var util = {
   tables: getTables(),
@@ -14,10 +17,13 @@ var util = {
   sumRep: sumRep,
   math: math,
   toRound: toRound,
+  winston: winston,
   log: log  
 }
 
 module.exports = util;
+
+winston.log('info',"Hello World from Node.js!");
 
 function log(prefix) {
 
@@ -48,7 +54,7 @@ function getDynamoDoc() {
     sessionToken:    process.env.AWS_SESSION_TOKEN,
     region:          process.env.AWS_REGION
   };
-    
+
   return new AWS.DynamoDB.DocumentClient(dynamoConfig);
 }
 

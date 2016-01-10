@@ -28,6 +28,7 @@ function createUser(event, cb) {
   };
 
   util.dynamoDoc.put(params, function(err, data) {
+    util.winston.log('info',newUser);
     return cb(err, newUser);
   });
 

@@ -6,11 +6,12 @@ module.exports = {
   cacheTotalUsersRep: cacheTotalUsersRep,
   addToCachedRep: addToCachedRep,
   updateCachedRep: updateCachedRep
-}
+};
 
-var _    = require('underscore');
-var async = require('async');
-var util = require('../');
+var nr       = require('newrelic');
+var _        = require('underscore');
+var async    = require('async');
+var util     = require('../');
 
 function updateCachedRep(event, cb) {
 
@@ -52,13 +53,13 @@ function cacheTotalUsersRep(event, cb) {
     ConsistentRead: true,
     ReturnConsumedCapacity: "TOTAL"
   };
-  
+
   util.dynamoDoc.scan(paramsForQueringUsers, function(err, data) {
     if (err) return cb(err);
     var totalRep = util.sumRep(data.Items);
     updateCachedRep({ reputation: totalRep }, cb);
   });
-  
+
 }
 
 // This function gets called whenever there1's a change on users table
@@ -143,7 +144,7 @@ function getAllItemsFromDb(table, cb) {
     ConsistentRead: true,
     ReturnConsumedCapacity: "TOTAL"
   };
-  
+
   util.dynamoDoc.scan(paramsForQueringUsers, function(err, data) {
     if (err) return cb(err);
     cb(err, data.Items);
