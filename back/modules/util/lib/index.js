@@ -30,12 +30,13 @@ function updateCachedRep(event, cb) {
 }
 
 function addToCachedRep(reputation, cb) {
+  console.log('addToCachedRep before parse', reputation);
   var params = {
     TableName: util.tables.caching,
     Key: { type: "totalRepInSystem" },
     UpdateExpression: 'set #val = #val + :v',
     ExpressionAttributeNames: { '#val' : 'theValue' },
-    ExpressionAttributeValues: { ':v' : reputation },
+    ExpressionAttributeValues: { ':v' : util.math.round(reputation, 5) },
     ReturnValues: 'ALL_NEW'
   };
 
@@ -69,18 +70,22 @@ function syncCachedSystemRep(event, cb) {
   _.each(event.Records, function(record) {
     if (record.eventName === 'REMOVE') {
       temp = record.dynamodb.OldImage.reputation;
-      repToAdd -= parseFloat(temp.N || temp.S);
+      repToAdd = util.math.subtract(repToAdd, util.math.eval(temp.N || temp.S));
 
     } else if (record.eventName === 'INSERT') {
       temp = record.dynamodb.NewImage.reputation;
-      repToAdd += parseFloat(temp.N || temp.S);
+      repToAdd = util.math.add(repToAdd, util.math.eval(temp.N || temp.S));
     } else {
       temp = record.dynamodb.NewImage.reputation;
       temp2 = record.dynamodb.OldImage.reputation;
-      repToAdd += parseFloat(temp.N || temp.S) - parseFloat(temp2.N || temp2.S);
+      var oldV = util.math.eval(temp2.N || temp2.S);
+      var newV = util.math.eval(temp.N || temp.S);
+      repToAdd = util.math.add(repToAdd, util.math.subtract(newV, oldV));
     }
+    console.log('repToAdd before parse', repToAdd);
+    repToAdd = util.math.round(repToAdd, 5);
+    console.log('repToAdd after parse', repToAdd);
   });
-  console.log('repToAdd', repToAdd);
   return addToCachedRep(repToAdd, cb);
 }
 

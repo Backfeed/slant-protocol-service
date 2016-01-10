@@ -29,12 +29,15 @@ module.exports = {
 
   toBody: toBody,
   toBodies: toBodies,
-  pp: parseRep
+  pp: parseRep,
+
+  math: math
 
 };
 
 var _ = require('underscore');
 var chakram = require('chakram');
+var math = require('mathjs');
 
 var URL = 'https://api.backfeed.cc/dev';
 
@@ -80,5 +83,5 @@ function toBody(x) {
 }
 
 function parseRep(n) {
-  return parseFloat(n.toFixed(10));
+  return math.round(n, 10);
 }

@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/backfeed/slant-service-protocol#readme",
   "dependencies": {
+    "mathjs": "2.5.0",
     "underscore": "1.8.3"
   },
   "devDependencies": {
