@@ -1,5 +1,6 @@
 'use strict';
 
+// var nr       = require('newrelic');
 var _        = require('underscore');
 var AWS      = require('aws-sdk');
 var uuid     = require('node-uuid');
