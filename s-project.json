@@ -2,27 +2,11 @@
   "name": "slant",
   "version": "0.0.1",
   "profile": "serverless-0",
-  "location": "https://github.com/...",
-  "author": "",
+  "location": "https://github.com/Backfeed/slant-protocol-service",
+  "author": "Backfeed",
   "description": "",
   "domain": "backfeed.cc",
   "stages": {
-    "development": [
-      {
-        "region": "us-east-1",
-        "iamRoleArnLambda": "arn:aws:iam::051563103010:role/slant-development-r-IamRoleLambda-1TV87M2A7RQAU",
-        "regionBucket": "serverless.useast1.backfeed.cc",
-        "restApiId": "czbcd3bnlj"
-      }
-    ],
-    "v1": [
-      {
-        "region": "us-east-1",
-        "iamRoleArnLambda": "arn:aws:iam::051563103010:role/slant-v1-r-IamRoleLambda-1MWLB98GYIURN",
-        "regionBucket": "serverless.useast1.backfeed.cc",
-        "restApiId": "czbcd3bnlj"
-      }
-    ],
     "v1p1": [
       {
         "region": "us-east-1",
