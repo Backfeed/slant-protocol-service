@@ -35,7 +35,7 @@ function addToCachedRep(reputation, cb) {
     Key: { type: "totalRepInSystem" },
     UpdateExpression: 'set #val = #val + :v',
     ExpressionAttributeNames: { '#val' : 'theValue' },
-    ExpressionAttributeValues: { ':v' : reputation },
+    ExpressionAttributeValues: { ':v' : util.pp(reputation) },
     ReturnValues: 'ALL_NEW'
   };
 

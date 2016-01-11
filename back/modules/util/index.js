@@ -5,6 +5,7 @@ var AWS      = require('aws-sdk');
 var uuid     = require('node-uuid');
 var math     = require('mathjs');
 var winston  = require('winston');
+require('winston-loggly');
 
 winston.add(winston.transports.Loggly, {
   inputToken: "58eb8773-b227-496a-916b-bc5f48653382",
@@ -20,14 +21,13 @@ var util = {
   uuid: uuid.v4,
   sumRep: sumRep,
   math: math,
-  toRound: toRound,
   winston: winston,
+  roundTo: getRoundTo(),
+  pp: parseProtocol,
   log: log  
 }
 
 module.exports = util;
-
-winston.log('info',"Hello World from Node.js!");
 
 function log(prefix) {
 
@@ -82,4 +82,12 @@ function getCachedRep(cb) {
     }
     return cb(err, data.Item.theValue);
   });
+}
+
+function getRoundTo() {
+  return math.eval(process.env.ROUND_TO);
+}
+
+function parseProtocol(n) {
+  return math.round(n, math.eval(process.env.ROUND_TO));
 }

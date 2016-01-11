@@ -22,10 +22,11 @@ describe.only("Test protocol according to excel", function() {
         return chakram.all(arr);
       })
       .then(function(res) {
-        console.log(res)
         arr = [];
         var users = res[0];
+        console.log('users', users);
         biddingId = res[1].body.id;
+        console.log('biddingId', biddingId);
         p1 = users[0];
         p2 = users[1];
         p3 = users[2];
@@ -69,10 +70,10 @@ describe.only("Test protocol according to excel", function() {
       })
       .then(function(res) {
         p1 = res.body;
-        expect(util.pp(p1.reputation)).to.be.equal(0.197676);
+        expect(p1.reputation).to.be.equal(0.197676);
         return util.getCachedRep()
       }).then(function(res) {
-        expect(util.pp(res.body)).to.be.equal(0.997676);
+        expect(res.body).to.be.equal(0.997676);
         return chakram.wait();
       });
   });

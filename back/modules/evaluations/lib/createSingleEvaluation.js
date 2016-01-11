@@ -84,6 +84,8 @@ module.exports.execute = function(event, cb) {
       evaluators = updateEvaluatorsRep(evaluators, iMap.get('newRep'), iMap.get('systemRep'));
       console.log('rep3', evaluators);
 
+      evaluators = cleanupEvaluators(evaluators);
+
       updateEvaluatorsRepToDb(evaluators, cb);
     }
 
@@ -97,7 +99,6 @@ function updateEvaluatorsRep(evaluators, currentUserRep, systemRep) {
   return _.map(evaluators, function(evaluator) {
     toDivide = util.math.chain(1)
                           .subtract(util.math.multiply(stake, factor))
-                          .round(util.toRound)
                           .done();
     evaluator.reputation = util.math.divide(evaluator.reputation, toDivide);
 
@@ -116,7 +117,6 @@ function updateSameEvaluatorsRep(evaluators, newRep, systemRep, contributionRep,
                         .multiply(factor)
                         .multiply(evaluator.reputation)
                         .divide(voteRep)
-                        .round(util.toRound)
                         .done();
 
       evaluator.reputation = util.math.add(burnStakeForCurrentUser(newRep), toAdd);
@@ -130,7 +130,6 @@ function updateSameEvaluatorsRep(evaluators, newRep, systemRep, contributionRep,
                         .multiply(factor)
                         .multiply(evaluator.reputation)
                         .divide(voteRep)
-                        .round(util.toRound)
                         .done();
       evaluator.reputation = util.math.add(evaluator.reputation, toAdd);
       console.log('evaluator.reputation', evaluator.reputation)
@@ -224,4 +223,12 @@ function getEvaluators(evaluations, cb) {
 function burnStakeForCurrentUser(currentUserRep) {
   var toMultiply = util.math.subtract(1, stake);
   return util.math.multiply(currentUserRep, toMultiply);
+}
+
+function cleanupEvaluators(evaluators) {
+  return _.map(evaluators, function(evaluator) {
+    evaluator.reputation = util.pp(evaluator.reputation);
+    evaluator = _.omit(evaluator, 'value');
+    return evaluator;
+  });
 }
