@@ -588,6 +588,32 @@
           ]
         }
       }
+    },
+    "EventSourceMapping": {
+      "Type": "AWS::Lambda::EventSourceMapping",
+      "Properties": {
+        "EventSourceArn" : {
+          "Fn::GetAtt": [
+            {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "ProjectName"
+                  },
+                  "-users-",
+                  {
+                    "Ref": "DataModelStage"
+                  }
+                ]
+              ]
+            },
+            "StreamArn"
+          ]
+        },
+        "FunctionName" : "arn:aws:lambda:us-east-1:051563103010:function:slant-synccahcedsystemrep",
+        "StartingPosition" : "LATEST"
+      }
     }
   },
   "Outputs": {
