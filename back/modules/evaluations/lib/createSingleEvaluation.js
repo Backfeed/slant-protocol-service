@@ -5,6 +5,7 @@ var _    = require('underscore');
 var async = require('async');
 var util = require('../../util');
 var Immutable = require('immutable');
+var protocol = require('backfeed-slant-protocol');
 var log = util.log('CREATE SINGLE');
 
 var stake = 0.05;
@@ -70,21 +71,16 @@ module.exports.execute = function(event, cb) {
 
     function(result, waterfallCB) {
       evaluators = result;
-      log('evaluators', evaluators);
-      evaluators = addVoteValueToEvaluators(evaluators, evaluations);
-      iMap = iMap.set('newRep', getCurrentUserFrom(evaluators, event.userId).reputation);
-      iMap = iMap.set('voteRep', getVoteRep(evaluators, event.value));
-      iMap = iMap.set('contributionRep', util.sumRep(evaluators));
 
-      console.log('rep1', evaluators);
+      var data = {
+        uid: event.userId,
+        value: event.value,
+        evaluators: evaluators,
+        evaluations: evaluations,
+        systemRep: iMap.get('systemRep')
+      };
 
-      evaluators = updateSameEvaluatorsRep(evaluators, iMap.get('newRep'), iMap.get('systemRep'), iMap.get('contributionRep'), iMap.get('voteRep'), event.value, event.userId);
-      console.log('rep2', evaluators);
-
-      evaluators = updateEvaluatorsRep(evaluators, iMap.get('newRep'), iMap.get('systemRep'));
-      console.log('rep3', evaluators);
-
-      evaluators = cleanupEvaluators(evaluators);
+      evaluators = protocol.evaluate(data);
 
       updateEvaluatorsRepToDb(evaluators, cb);
     }
@@ -93,76 +89,7 @@ module.exports.execute = function(event, cb) {
 
 }
 
-function updateEvaluatorsRep(evaluators, currentUserRep, systemRep) {
-  var factor = util.math.pow(util.math.divide(currentUserRep, systemRep), beta);
-  var toDivide;
-  return _.map(evaluators, function(evaluator) {
-    toDivide = util.math.chain(1)
-                          .subtract(util.math.multiply(stake, factor))
-                          .done();
-    evaluator.reputation = util.math.divide(evaluator.reputation, toDivide);
 
-    return evaluator;
-  });
-}
-
-function updateSameEvaluatorsRep(evaluators, newRep, systemRep, contributionRep, voteRep, currentEvaluationValue, currentUserId) {
-  var toAdd;
-  var factor = util.math.pow(util.math.divide(contributionRep, systemRep), alpha);
-  return _.map(evaluators, function(evaluator) {
-
-    if ( evaluator.id === currentUserId ) {
-      toAdd = util.math.chain(newRep)
-                        .multiply(stake)
-                        .multiply(factor)
-                        .multiply(evaluator.reputation)
-                        .divide(voteRep)
-                        .done();
-
-      evaluator.reputation = util.math.add(burnStakeForCurrentUser(newRep), toAdd);
-      console.log('toAdd', toAdd)
-      console.log('evaluator.reputation', evaluator.reputation)
-    }
-
-    else if ( evaluator.value === currentEvaluationValue ) {
-      toAdd = util.math.chain(newRep)
-                        .multiply(stake)
-                        .multiply(factor)
-                        .multiply(evaluator.reputation)
-                        .divide(voteRep)
-                        .done();
-      evaluator.reputation = util.math.add(evaluator.reputation, toAdd);
-      console.log('evaluator.reputation', evaluator.reputation)
-    }
-
-
-    return evaluator;
-  });
-}
-
-function addVoteValueToEvaluators(evaluators, evaluations) {
-  return _.map(evaluators, function(evaluator) {
-    evaluator.value = _.find(evaluations, function(evaluation) {
-      return evaluation.userId === evaluator.id;
-    }).value;
-    
-    return evaluator;
-  });
-}
-
-function getVoteRep(evaluators, value) {
-  var toAdd = 0;
-  return _.reduce(evaluators, function(memo, evaluator) {
-    toAdd = evaluator.value === value ? evaluator.reputation : 0;
-    return memo + toAdd;
-  }, 0);
-}
-
-function getCurrentUserFrom(evaluators, currentUserId) {
-  return _.find(evaluators, function(evaluator) {
-    return evaluator.id === currentUserId;
-  });
-}
 
 function updateEvaluatorsRepToDb(evaluators, callback) {
   var params = {
@@ -217,18 +144,5 @@ function getEvaluators(evaluations, cb) {
 
   util.dynamoDoc.batchGet(params, function(err, data) {
     return cb(err, data.Responses[util.tables.users]);
-  });
-}
-
-function burnStakeForCurrentUser(currentUserRep) {
-  var toMultiply = util.math.subtract(1, stake);
-  return util.math.multiply(currentUserRep, toMultiply);
-}
-
-function cleanupEvaluators(evaluators) {
-  return _.map(evaluators, function(evaluator) {
-    evaluator.reputation = util.pp(evaluator.reputation);
-    evaluator = _.omit(evaluator, 'value');
-    return evaluator;
   });
 }
