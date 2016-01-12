@@ -32,7 +32,6 @@ module.exports.execute = function(event, cb) {
   async.waterfall([
 
     function(waterfallCB) {
-
       async.parallel({
         systemRep: function(parallelCB) {
           util.getCachedRep(parallelCB);
@@ -42,30 +41,34 @@ module.exports.execute = function(event, cb) {
         }
       },
         function(err, results) {
-          iMap = iMap.set('systemRep', results.systemRep);
-          log('systemRep', iMap.get('systemRep'));
-          evaluations = results.evaluations;
-
-          var currentUserFormerEvaluation = _.findWhere(evaluations, { userId: event.userId });
-
-          if (!!currentUserFormerEvaluation) {
-
-            if (currentUserFormerEvaluation.value === event.value) {
-              return cb(new Error('400: bad request. current user already evaluated this contribution with this value'));
-            }
-
-            log('current user already evaluated this contribution, removing his vote');
-            evaluations = _.reject(evaluations, function(e) {
-              return e.userId === event.userId;
-            });
-
-          }
-
-          evaluations.push(event);
-          log('evaluations', evaluations);
-          getEvaluators(evaluations, waterfallCB);
+          waterfallCB(err, results);
         }
       );
+    },
+
+    function(results, waterfallCB) {
+      iMap = iMap.set('systemRep', results.systemRep);
+      log('systemRep', iMap.get('systemRep'));
+      evaluations = results.evaluations;
+
+      var currentUserFormerEvaluation = _.findWhere(evaluations, { userId: event.userId });
+
+      if (!!currentUserFormerEvaluation) {
+
+        if (currentUserFormerEvaluation.value === event.value) {
+          return cb(new Error('400: bad request. current user already evaluated this contribution with this value'));
+        }
+
+        log('current user already evaluated this contribution, removing his vote');
+        evaluations = _.reject(evaluations, function(e) {
+          return e.userId === event.userId;
+        });
+
+      }
+
+      evaluations.push(event);
+      log('evaluations', evaluations);
+      getEvaluators(evaluations, waterfallCB);
 
     },
 
