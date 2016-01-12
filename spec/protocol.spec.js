@@ -12,6 +12,7 @@ describe.only("Test protocol according to excel", function() {
   var contributionId1;
   var contributionId2;
   var p1, p2, p3, p4, p5;
+  var systemRep;
   var arr = [];
 
   before(function() {
@@ -24,9 +25,7 @@ describe.only("Test protocol according to excel", function() {
       .then(function(res) {
         arr = [];
         var users = res[0];
-        console.log('users', users);
         biddingId = res[1].body.id;
-        console.log('biddingId', biddingId);
         p1 = users[0];
         p2 = users[1];
         p3 = users[2];
@@ -76,6 +75,27 @@ describe.only("Test protocol according to excel", function() {
         expect(res.body).to.be.equal(0.997676);
         return chakram.wait();
       });
+  });
+
+  it("should distribute rep according to step 2", function() {
+    return util.evaluation.create({
+      biddingId: biddingId,
+      userId: p2.id,
+      evaluations: [{ contributionId: contributionId1, value: 0 }]
+    }).then(function(res) {
+      arr = [];
+      arr.push(util.user.get(p1.id));
+      arr.push(util.user.get(p2.id));
+      arr.push(util.getCachedRep());
+      return chakram.all(arr);
+    }).then(function(res) {
+      p1 = res[0].body;
+      p2 = res[1].body;
+      systemRep = res[2].body;
+      expect(p1.reputation).to.be.equal(0.200938);
+      expect(p2.reputation).to.be.equal(0.197686);
+      expect(systemRep).to.be.equal(0.998624);
+    })
   });
 
 });
