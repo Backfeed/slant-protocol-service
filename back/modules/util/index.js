@@ -80,7 +80,7 @@ function getCachedRep(cb) {
       err = '404:Resource not found.';
       return cb(err);
     }
-    return cb(err, data.Item.theValue);
+    return cb(err, data.Item);
   });
 }
 

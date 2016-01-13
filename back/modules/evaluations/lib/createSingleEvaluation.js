@@ -47,7 +47,7 @@ module.exports.execute = function(event, cb) {
     },
 
     function(results, waterfallCB) {
-      iMap = iMap.set('systemRep', results.systemRep);
+      iMap = iMap.set('systemRep', results.systemRep.theValue);
       log('systemRep', iMap.get('systemRep'));
       evaluations = results.evaluations;
 
