@@ -21,11 +21,12 @@ function createEvaluation(event, cb) {
   };
 
   var submittedEvaluations = [];
-  var submittedEvaluationsIds = [];
+  var responseArr = [];
   var newEvaluation;
-  async.each(event.evaluations, function(element, callback) {
+  var dbEvaluationWrapper;
+
+  async.each(event.evaluations, function(element, eachCB) {
     newEvaluation = {
-      "id": element.id || util.uuid(),
       "userId": event.userId,
       "biddingId": event.biddingId,
       "contributionId": element.contributionId,
@@ -33,21 +34,33 @@ function createEvaluation(event, cb) {
       "createdAt": Date.now()
     };
 
-    var dbEvaluationWrapper = {
-      PutRequest: {
-        Item: newEvaluation
+    async.waterfall([
+      function(waterfallCB) {
+        createSingleEvaluation.execute(newEvaluation, waterfallCB);
       }
-    };
-
-    submittedEvaluations.push(dbEvaluationWrapper);
-    submittedEvaluationsIds.push(newEvaluation.id);
-    createSingleEvaluation.execute(newEvaluation, callback);
+    ],
+      function(err, newEvalId) {
+        if (err) {
+          responseArr.push(err);
+        } else {
+          newEvaluation.id = newEvalId;
+          dbEvaluationWrapper = {
+            PutRequest: {
+              Item: newEvaluation
+            }
+          };
+          submittedEvaluations.push(dbEvaluationWrapper);
+          responseArr.push(newEvaluation.id);
+        }
+        eachCB(null);
+      }
+    );
 
   }, function(err) {
     console.log('iterate done');
     params.RequestItems[util.tables.evaluations] = submittedEvaluations;
     util.dynamoDoc.batchWrite(params, function(err, data) {
-      return cb(err, submittedEvaluationsIds);
+      return cb(err, responseArr);
     });
   });
 

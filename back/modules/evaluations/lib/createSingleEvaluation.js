@@ -28,6 +28,7 @@ module.exports.execute = function(event, cb) {
 
   var evaluations;
   var evaluators;
+  var newEvalId;
 
   async.waterfall([
 
@@ -59,11 +60,15 @@ module.exports.execute = function(event, cb) {
           return cb(new Error('400: bad request. current user already evaluated this contribution with this value'));
         }
 
+        newEvalId = currentUserFormerEvaluation.id;
+
         log('current user already evaluated this contribution, removing his vote');
         evaluations = _.reject(evaluations, function(e) {
           return e.userId === event.userId;
         });
 
+      } else {
+        newEvalId = util.uuid();
       }
 
       evaluations.push(event);
@@ -85,14 +90,16 @@ module.exports.execute = function(event, cb) {
 
       evaluators = protocol.evaluate(data);
 
-      updateEvaluatorsRepToDb(evaluators, cb);
-    }
+      updateEvaluatorsRepToDb(evaluators, waterfallCB);
+    },
 
-  ]);
+  ], 
+    function(err, result) {
+      return cb(err, newEvalId);
+    }
+  );
 
 }
-
-
 
 function updateEvaluatorsRepToDb(evaluators, callback) {
   var params = {
