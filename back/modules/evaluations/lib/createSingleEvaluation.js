@@ -5,6 +5,7 @@ var _         = require('underscore');
 var async     = require('async');
 var util      = require('../../util');
 var db        = require('../../util/db');
+var getCachedRep = require('../../util/getcachedrep/func');
 var Immutable = require('immutable');
 var protocol  = require('backfeed-slant-protocol');
 
@@ -35,7 +36,7 @@ module.exports.execute = function(event, cb) {
     function(waterfallCB) {
       async.parallel({
         systemRep: function(parallelCB) {
-          util.getCachedRep(parallelCB);
+          getCachedRep(parallelCB);
         },
         evaluations: function(parallelCB) {
           getEvaluations(event.contributionId, parallelCB);

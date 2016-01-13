@@ -11,12 +11,11 @@
 var ServerlessHelpers = require('serverless-helpers-js').loadEnv();
 
 // Require Logic
-var util = require('../');
+var getCachedRep = require('./func');
 
 // Lambda Handler
 module.exports.handler = function(event, context) {
-
-  util.getCachedRep(function(error, response) {
+  getCachedRep(function(error, response) {
     return context.done(error, response);
   });
 };

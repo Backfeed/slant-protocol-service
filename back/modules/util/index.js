@@ -1,14 +1,13 @@
 'use strict';
 
-var logger   = require('./logger');
-var _        = require('underscore');
-var AWS      = require('aws-sdk');
-var uuid     = require('node-uuid');
-var math     = require('mathjs');
+var logger = require('./logger');
+var _      = require('underscore');
+var AWS    = require('aws-sdk');
+var uuid   = require('node-uuid');
+var math   = require('mathjs');
 
 var util = {
   tables: getTables(),
-  getCachedRep: getCachedRep,
   dynamoDoc: getDynamoDoc(),
   uuid: uuid.v4,
   sumRep: sumRep,
@@ -43,22 +42,6 @@ function sumRep(users) {
   return _.reduce(users, function(memo, user) {
     return memo + user.reputation;
   }, 0);
-}
-
-function getCachedRep(cb) {
-
-  var params = {
-    TableName : util.tables.caching,
-    Key: { type: "totalRepInSystem" }
-  };
-
-  return util.dynamoDoc.get(params, function(err, data) {
-    if (_.isEmpty(data)) {
-      err = '404:Resource not found.';
-      return cb(err);
-    }
-    return cb(err, data.Item);
-  });
 }
 
 function getRoundTo() {
