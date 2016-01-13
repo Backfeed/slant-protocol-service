@@ -26,7 +26,7 @@ function createContribution(event, cb) {
     Item: newContribution
   };
 
-  return db.putItem(params, cb, newContribution);
+  return db.put(params, cb, newContribution);
 }
 
 function getContribution(event, cb) {
@@ -36,7 +36,7 @@ function getContribution(event, cb) {
     Key: { id: event.id }
   };
 
-  return db.getItem(params, cb);
+  return db.get(params, cb);
 }
 
 function getContributionEvaluations(event, cb) {
@@ -64,5 +64,5 @@ function deleteContribution(event, cb) {
     ReturnValues: 'ALL_OLD'
   };
 
-  return db.deleteItem(params, cb);
+  return db.del(params, cb);
 }

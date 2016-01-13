@@ -29,7 +29,7 @@ function createBidding(event, cb) {
     Item: newBidding
   };
 
-  return db.putItem(params, cb, newBidding);
+  return db.put(params, cb, newBidding);
 }
 
 function getBidding(event, cb) {
@@ -39,7 +39,7 @@ function getBidding(event, cb) {
     Key: { id: event.id }
   };
 
-  return db.getItem(params, cb);
+  return db.get(params, cb);
 }
 
 function getBiddingWithLeadingContribution(event, cb) {
@@ -289,7 +289,7 @@ function deleteBidding(event, cb) {
     ReturnValues: 'ALL_OLD'
   };
 
-  return db.deleteItem(params, cb);
+  return db.del(params, cb);
 }
 
 function getWinningContribution(contributionId) {
@@ -299,7 +299,7 @@ function getWinningContribution(contributionId) {
     Key: { id:contributionId }
   };
 
-  return db.getItem(params, cb);
+  return db.get(params, cb);
 }
 
 function endBiddingInDb(id, winningContributionId, cb) {

@@ -29,7 +29,7 @@ function createUser(event, cb) {
     Item: newUser
   };
 
-  return db.putItem(params, cb, newUser);
+  return db.put(params, cb, newUser);
 }
 
 function getUser(event, cb) {
@@ -39,7 +39,7 @@ function getUser(event, cb) {
     Key: { id: event.id }
   };
 
-  return db.getItem(params, cb);
+  return db.get(params, cb);
 }
 
 function getUserEvaluations(event, cb) {
@@ -75,7 +75,7 @@ function deleteUser(event, cb) {
     ReturnValues: 'ALL_OLD'
   };
 
-  return db.deleteItem(params, cb);
+  return db.del(params, cb);
 }
 
 function updateUser(event, cb) {
@@ -94,5 +94,5 @@ function updateUser(event, cb) {
     ReturnValues: 'ALL_NEW'
   };
 
-  return db.updateItem(params, cb);
+  return db.update(params, cb);
 }

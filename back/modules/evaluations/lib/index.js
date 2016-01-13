@@ -72,7 +72,7 @@ function getEvaluation(event, cb) {
     Key: { id: event.id }
   };
 
-  return db.getItem(params, cb);
+  return db.get(params, cb);
 }
 
 function deleteEvaluation(event, cb) {
@@ -83,5 +83,5 @@ function deleteEvaluation(event, cb) {
     ReturnValues: 'ALL_OLD'
   };
 
-  return db.deleteItem(params, cb);
+  return db.del(params, cb);
 }
