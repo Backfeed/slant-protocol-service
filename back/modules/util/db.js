@@ -4,6 +4,7 @@ var _         = require('underscore');
 var AWS       = require('aws-sdk');
 var util      = require('./');
 var dynamoDoc = getDynamoDoc();
+var notFoundMsg = '404:Resource not found.';
 
 var db = {
   put: put,
@@ -31,14 +32,14 @@ function get(params, cb) {
   return dynamoDoc.get(params, function(err, data) {
     util.log.info(err, data);
     if (err) return {}; //err;
-    returnIfNotFound(data, cb);
+    if (_.isEmpty(data)) return cb(notFoundMsg);
     return cb(err, data.Item);
   });
 }
 
 function query(params, cb) {
   dynamoDoc.query(params, function(err, data) {
-    returnIfNotFound(data.Items, cb);
+    if (_.isEmpty(data)) return cb(notFoundMsg);
     return cb(err, data.Items);
   });
 }
@@ -50,7 +51,7 @@ function scan(params, cb) {
 function update(params, cb) {
   return dynamoDoc.update(params, function(err, data) {
     util.log.info(err, data);
-    returnIfNotFound(data, cb);
+    if (_.isEmpty(data)) return cb(notFoundMsg);
     return cb(err, data.Attributes);
   });
 }
@@ -58,7 +59,7 @@ function update(params, cb) {
 function del(params, cb) {
   return dynamoDoc.delete(params, function(err, data) {
     util.log.info(err, data);
-    returnIfNotFound(data, cb);
+    if (_.isEmpty(data)) return cb(notFoundMsg);
     return cb(err, data.Attributes);
   });
 }
@@ -93,8 +94,6 @@ function getTables() {
   };
 }
 
-function returnIfNotFound(data, cb) {
-  if (_.isEmpty(data)) {
-    return cb('404:Resource not found.');
-  }
+function returnNotFound(data, cb) {
+  return cb('404:Resource not found.');
 }
