@@ -118,9 +118,8 @@ function getPositiveEvaluationsByBiddingId(biddingId, callback) {
       ':v': 1
     }
   };
-  util.dynamoDoc.query(params, function(err, data) {
-    return callback(err, data.Items);
-  });
+  
+  return db.query(params, cb);
 }
 
 function getUsersByEvaluations(evaluations, callback) {
@@ -188,14 +187,7 @@ function getContributions(event, cb) {
     ExpressionAttributeValues: { ':hkey': event.id }
   };
 
-  util.dynamoDoc.query(params, function(err, data) {
-    if (_.isEmpty(data)) {
-      err = '404:Resource not found.';
-      return cb(err);
-    }
-    return cb(err, data.Items);
-  });
-
+  return db.query(params, cb);
 }
 
 function getBiddingUserEvaluations(event, cb) {
@@ -213,7 +205,6 @@ function getBiddingUserEvaluations(event, cb) {
 }
 
 function getUserEvaluations(event, cb) {
-
   var params = {
     TableName : db.tables.evaluations,
     IndexName: 'evaluations-biddingId-userId',
@@ -223,16 +214,7 @@ function getUserEvaluations(event, cb) {
       ':rkey': event.userId
     }
   };
-  util.dynamoDoc.query(params, function(err, data) {
-    if (_.isEmpty(data)) {
-      err = '404:Resource not found.';
-      return cb(err);
-    }
-    return cb(null, {
-      'err': err,
-      'items': data.Items
-    });
-  });
+  return db.query(params, cb);
 }
 
 function endBidding(event, cb) {

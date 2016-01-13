@@ -123,15 +123,14 @@ function updateEvaluatorsRepToDb(evaluators, callback) {
 }
 
 function getEvaluations(contributionId, cb) {
-  var paramsForQueringEvaluations = {
+  var params = {
     TableName : db.tables.evaluations,
     IndexName: 'evaluations-contributionId-createdAt',
     KeyConditionExpression: 'contributionId = :hkey',
     ExpressionAttributeValues: { ':hkey': contributionId }
   };
-  util.dynamoDoc.query(paramsForQueringEvaluations, function(err, data) {
-    return cb(err, data.Items);
-  });
+
+  return db.query(params, cb);
 }
 
 function getEvaluators(evaluations, cb) {
