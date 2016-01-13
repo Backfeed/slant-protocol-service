@@ -45,7 +45,10 @@ function query(params, cb) {
 }
 
 function scan(params, cb) {
-
+  return util.dynamoDoc.scan(params, function(err, data) {
+    if (_.isEmpty(data)) return cb(notFoundMsg);
+    return cb(err, data.Items);
+  });
 }
 
 function update(params, cb) {

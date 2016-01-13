@@ -50,17 +50,13 @@ function cacheTotalUsersRep(event, cb) {
 
   async.waterfall([
     function(waterfallCB) {
-      util.dynamoDoc.scan(params, function(err, data) {
-        if (err) return cb(err);
-        var totalRep = util.sumRep(data.Items);
-        waterfallCB(totalRep);
-      });
+      db.scan(params, waterfallCB);
     },
-    function(totalRep, waterfallCB) {
+    function(allUsersRep, waterfallCB) {
+      var totalRep = util.sumRep(allUsersRep);
       updateCachedRep({ reputation: totalRep }, cb);
     }
   ]);
-
 }
 
 // This function gets called whenever there1's a change on users table
@@ -140,16 +136,13 @@ function cleanseDb(event, cb) {
 }
 
 function getAllItemsFromDb(table, cb) {
-  var paramsForQueringUsers = {
+  var params = {
     TableName: util.tables[table],
     ConsistentRead: true,
     ReturnConsumedCapacity: "TOTAL"
   };
 
-  util.dynamoDoc.scan(paramsForQueringUsers, function(err, data) {
-    if (err) return cb(err);
-    cb(err, data.Items);
-  });
+  db.scan(params, cb);
 }
 
 function deleteItemsFromDb(xs, table, cb) {
