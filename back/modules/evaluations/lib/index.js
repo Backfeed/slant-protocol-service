@@ -8,13 +8,14 @@ module.exports = {
 
 var _     = require('underscore');
 var async = require('async');
-var util = require('../../util');
+var util  = require('../../util');
+var db    = require('../../util/db');
 var createSingleEvaluation = require('../lib/createSingleEvaluation');
 
 function createEvaluation(event, cb) {
 
   var params = {
-    TableName : util.tables.evaluations,
+    TableName : db.tables.evaluations,
     RequestItems: {},
     ReturnConsumedCapacity: 'NONE',
     ReturnItemCollectionMetrics: 'NONE'
@@ -58,10 +59,8 @@ function createEvaluation(event, cb) {
 
   }, function(err) {
     console.log('iterate done');
-    params.RequestItems[util.tables.evaluations] = submittedEvaluations;
-    util.dynamoDoc.batchWrite(params, function(err, data) {
-      return cb(err, responseArr);
-    });
+    params.RequestItems[db.tables.evaluations] = submittedEvaluations;
+    db.batchWrite(params, cb, responseArr);
   });
 
 }
@@ -69,29 +68,20 @@ function createEvaluation(event, cb) {
 function getEvaluation(event, cb) {
 
   var params = {
-    TableName : util.tables.evaluations,
+    TableName : db.tables.evaluations,
     Key: { id: event.id }
   };
 
-  return util.dynamoDoc.get(params, function(err, data) {
-    if (_.isEmpty(data)) {
-      err = '404:Resource not found.';
-      return cb(err);
-    }
-    return cb(err, data.Item);
-  });
-
+  return db.getItem(params, cb);
 }
 
 function deleteEvaluation(event, cb) {
 
   var params = {
-    TableName : util.tables.evaluations,
-    Key: { id: event.id }
+    TableName : db.tables.evaluations,
+    Key: { id: event.id },
+    ReturnValues: 'ALL_OLD'
   };
-  
-  return util.dynamoDoc.delete(params, function(err, data) {
-    return cb(err, params.Key);
-  });
-  
+
+  return db.deleteItem(params, cb);
 }

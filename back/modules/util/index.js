@@ -1,18 +1,10 @@
 'use strict';
 
+var logger   = require('./logger');
 var _        = require('underscore');
 var AWS      = require('aws-sdk');
 var uuid     = require('node-uuid');
 var math     = require('mathjs');
-var winston  = require('winston');
-require('winston-loggly');
-
-winston.add(winston.transports.Loggly, {
-  inputToken: "58eb8773-b227-496a-916b-bc5f48653382",
-  subdomain: "jankei",
-  tags: ["Winston-NodeJS"],
-  json:true
-});
 
 var util = {
   tables: getTables(),
@@ -21,27 +13,12 @@ var util = {
   uuid: uuid.v4,
   sumRep: sumRep,
   math: math,
-  winston: winston,
   roundTo: getRoundTo(),
   pp: parseProtocol,
-  log: log  
-}
+  log: logger.winston
+};
 
 module.exports = util;
-
-function log(prefix) {
-
-  return function() {
-    if (process.env.SERVERLESS_STAGE === 'development')
-      return;
-
-    console.log('***************** ' + prefix + ' *******************');
-    _.each(arguments, function(msg, i) { console.log(msg); });
-    console.log('***************** /' + prefix + ' *******************');
-    console.log('\n');
-  };
-
-}
 
 function getTables() {
   return {

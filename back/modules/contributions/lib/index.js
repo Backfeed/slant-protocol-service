@@ -8,8 +8,9 @@ module.exports = {
   deleteContribution: deleteContribution
 };
 
-var _ = require('underscore');
-var util = require('../../util');
+var _     = require('underscore');
+var util  = require('../../util');
+var db    = require('../../util/db');
 
 function createContribution(event, cb) {
 
@@ -21,46 +22,33 @@ function createContribution(event, cb) {
   };
 
   var params = {
-    TableName : util.tables.contributions,
+    TableName : db.tables.contributions,
     Item: newContribution
   };
 
-  util.dynamoDoc.put(params, function(err, data) {
-    return cb(err, newContribution);
-  });
-
+  return db.putItem(params, cb, newContribution);
 }
 
 function getContribution(event, cb) {
 
   var params = {
-    TableName : util.tables.contributions,
+    TableName : db.tables.contributions,
     Key: { id: event.id }
   };
 
-  return util.dynamoDoc.get(params, function(err, data) {
-    if (_.isEmpty(data)) {
-      err = '404:Resource not found.';
-      return cb(err);
-    }
-    return cb(err, data.Item);
-  });
-
+  return db.getItem(params, cb);
 }
 
 function getContributionEvaluations(event, cb) {
 
   var params = {
-    TableName : util.tables.evaluations,
+    TableName : db.tables.evaluations,
     IndexName: 'evaluations-contributionId-createdAt',
     KeyConditionExpression: 'contributionId = :hkey',
     ExpressionAttributeValues: { ':hkey': event.id }
   };
 
-  util.dynamoDoc.query(params, function(err, data) {
-    return cb(err, data.Items);
-  });
-
+  db.query(params, cb);
 }
 
 function getContributionUsers(event, cb) {
@@ -71,12 +59,10 @@ function getContributionUsers(event, cb) {
 function deleteContribution(event, cb) {
 
   var params = {
-    TableName : util.tables.contributions,
-    Key: { id: event.id }
+    TableName : db.tables.contributions,
+    Key: { id: event.id },
+    ReturnValues: 'ALL_OLD'
   };
 
-  return util.dynamoDoc.delete(params, function(err, data) {
-    return cb(err, params.Key);
-  });
-
+  return db.deleteItem(params, cb);
 }

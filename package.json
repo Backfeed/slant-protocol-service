@@ -5,6 +5,7 @@
   "scripts": {
     "test": "mocha spec",
     "localtest": "mocha spec -w",
+    "sanity": "mocha **/basicApi.spec.js -w",
     "start": "npm run localtest"
   },
   "repository": {

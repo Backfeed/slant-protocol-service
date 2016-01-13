@@ -1,12 +1,12 @@
 'use strict';
 
 var ServerlessHelpers = require('serverless-helpers-js').loadEnv();
-var _    = require('underscore');
-var async = require('async');
-var util = require('../../util');
+var _         = require('underscore');
+var async     = require('async');
+var util      = require('../../util');
+var db        = require('../../util/db');
 var Immutable = require('immutable');
-var protocol = require('backfeed-slant-protocol');
-var log = util.log('CREATE SINGLE');
+var protocol  = require('backfeed-slant-protocol');
 
 var stake = 0.05;
 var alpha = 0.5;
@@ -15,9 +15,9 @@ var beta = 0.7;
 // Lambda Handler
 module.exports.execute = function(event, cb) {
 
-  log('event', event);
+  util.log.debug('event', event);
 
-  var iMap = Immutable.Map({ 
+  var iMap = Immutable.Map({
     newRep: 0,
     voteRep: 0,
     contributionRep: 0,
@@ -49,7 +49,7 @@ module.exports.execute = function(event, cb) {
 
     function(results, waterfallCB) {
       iMap = iMap.set('systemRep', results.systemRep.theValue);
-      log('systemRep', iMap.get('systemRep'));
+      util.log.debug('systemRep', iMap.get('systemRep'));
       evaluations = results.evaluations;
 
       var currentUserFormerEvaluation = _.findWhere(evaluations, { userId: event.userId });
@@ -62,7 +62,7 @@ module.exports.execute = function(event, cb) {
 
         newEvalId = currentUserFormerEvaluation.id;
 
-        log('current user already evaluated this contribution, removing his vote');
+        util.log.debug('current user already evaluated this contribution, removing his vote');
         evaluations = _.reject(evaluations, function(e) {
           return e.userId === event.userId;
         });
@@ -72,7 +72,7 @@ module.exports.execute = function(event, cb) {
       }
 
       evaluations.push(event);
-      log('evaluations', evaluations);
+      util.log.debug('evaluations', evaluations);
       getEvaluators(evaluations, waterfallCB);
 
     },
@@ -93,7 +93,7 @@ module.exports.execute = function(event, cb) {
       updateEvaluatorsRepToDb(evaluators, waterfallCB);
     },
 
-  ], 
+  ],
     function(err, result) {
       return cb(err, newEvalId);
     }
@@ -103,7 +103,7 @@ module.exports.execute = function(event, cb) {
 
 function updateEvaluatorsRepToDb(evaluators, callback) {
   var params = {
-    TableName: util.tables.users,
+    TableName: db.tables.users,
     RequestItems: {},
     ReturnConsumedCapacity: 'NONE',
     ReturnItemCollectionMetrics: 'NONE'
@@ -116,7 +116,7 @@ function updateEvaluatorsRepToDb(evaluators, callback) {
     submittedEvaluators.push(dbEvaluatorsWrapper);
   });
 
-  params.RequestItems[util.tables.users] = submittedEvaluators;
+  params.RequestItems[db.tables.users] = submittedEvaluators;
   util.dynamoDoc.batchWrite(params, function(err, data) {
     callback(err, data);
   });
@@ -124,7 +124,7 @@ function updateEvaluatorsRepToDb(evaluators, callback) {
 
 function getEvaluations(contributionId, cb) {
   var paramsForQueringEvaluations = {
-    TableName : util.tables.evaluations,
+    TableName : db.tables.evaluations,
     IndexName: 'evaluations-contributionId-createdAt',
     KeyConditionExpression: 'contributionId = :hkey',
     ExpressionAttributeValues: { ':hkey': contributionId }
@@ -144,15 +144,15 @@ function getEvaluators(evaluations, cb) {
     return { id: evaluation.userId };
   });
 
-  Keys = _.uniq(Keys, function(item, key, a) { 
+  Keys = _.uniq(Keys, function(item, key, a) {
     return item.id;
   });
 
-  params.RequestItems[util.tables.users] = {
+  params.RequestItems[db.tables.users] = {
     Keys: Keys
   };
 
   util.dynamoDoc.batchGet(params, function(err, data) {
-    return cb(err, data.Responses[util.tables.users]);
+    return cb(err, data.Responses[db.tables.users]);
   });
 }

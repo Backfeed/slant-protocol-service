@@ -13,7 +13,8 @@ module.exports = {
 
 var _     = require('underscore');
 var async = require('async');
-var util = require('../../util');
+var util  = require('../../util');
+var db    = require('../../util/db');
 
 function createBidding(event, cb) {
 
@@ -24,31 +25,21 @@ function createBidding(event, cb) {
   };
 
   var params = {
-    TableName : util.tables.biddings,
+    TableName : db.tables.biddings,
     Item: newBidding
   };
 
-  util.dynamoDoc.put(params, function(err, data) {
-    return cb(err, newBidding);
-  });
-
+  return db.putItem(params, cb, newBidding);
 }
 
 function getBidding(event, cb) {
 
   var params = {
-    TableName : util.tables.biddings,
+    TableName : db.tables.biddings,
     Key: { id: event.id }
   };
 
-  return util.dynamoDoc.get(params, function(err, data) {
-    if (_.isEmpty(data)) {
-      err = '404:Resource not found.';
-      return cb(err);
-    }
-    return cb(err, data.Item);
-  });
-
+  return db.getItem(params, cb);
 }
 
 function getBiddingWithLeadingContribution(event, cb) {
@@ -118,7 +109,7 @@ function getUserRep(users, userId) {
 
 function getPositiveEvaluationsByBiddingId(biddingId, callback) {
   var params = {
-    TableName : util.tables.evaluations,
+    TableName : db.tables.evaluations,
     IndexName: 'evaluations-biddingId-value',
     ExpressionAttributeNames: { '#v': 'value' }, // Need to do this since 'value' is a resevred dynamoDB word
     KeyConditionExpression: 'biddingId = :bkey and #v = :v',
@@ -145,12 +136,13 @@ function getUsersByEvaluations(evaluations, callback) {
     return item.id;
   });
 
-  params.RequestItems[util.tables.users] = {
+  params.RequestItems[db.tables.users] = {
     Keys: Keys
   };
 
+  //db.batchGet(params, callback, db.tables.users);
   util.dynamoDoc.batchGet(params, function(err, data) {
-    return callback(err, data.Responses[util.tables.users]);
+    return callback(err, data.Responses[db.tables.users]);
   });
 }
 
@@ -190,7 +182,7 @@ function getBiddingContributions(event, cb) {
 function getContributions(event, cb) {
 
   var params = {
-    TableName : util.tables.contributions,
+    TableName : db.tables.contributions,
     IndexName: 'contributions-biddingId-createdAt',
     KeyConditionExpression: 'biddingId = :hkey',
     ExpressionAttributeValues: { ':hkey': event.id }
@@ -223,7 +215,7 @@ function getBiddingUserEvaluations(event, cb) {
 function getUserEvaluations(event, cb) {
 
   var params = {
-    TableName : util.tables.evaluations,
+    TableName : db.tables.evaluations,
     IndexName: 'evaluations-biddingId-userId',
     KeyConditionExpression: 'biddingId = :hkey and userId = :rkey',
     ExpressionAttributeValues: {
@@ -292,19 +284,12 @@ function endBidding(event, cb) {
 function deleteBidding(event, cb) {
 
   var params = {
-    TableName : util.tables.biddings,
+    TableName : db.tables.biddings,
     Key: { id: event.id },
     ReturnValues: 'ALL_OLD'
   };
 
-  return util.dynamoDoc.delete(params, function(err, data) {
-    if (_.isEmpty(data)) {
-      err = '404:Resource not found.';
-      return cb(err);
-    }
-    return cb(err, data.Attributes);
-  });
-
+  return db.deleteItem(params, cb);
 }
 
 function getWinningContribution(contributionId) {
@@ -314,16 +299,12 @@ function getWinningContribution(contributionId) {
     Key: { id:contributionId }
   };
 
-  util.dynamoDoc.get(params, function(err, data) {
-    if (err) return {}; //err;
-    else return data.Item;
-  });
-
+  return db.getItem(params, cb);
 }
 
 function endBiddingInDb(id, winningContributionId, cb) {
   var params = {
-    TableName: util.tables.biddings,
+    TableName: db.tables.biddings,
     Key: { id: id },
     UpdateExpression: 'set #sta = :s, #win = :w, #end = :e',
     ExpressionAttributeNames: {
@@ -346,7 +327,7 @@ function endBiddingInDb(id, winningContributionId, cb) {
 
 function rewardContributor(contributorId, contributionScore, totalSystemRep, cb) {
   var params = {
-    TableName: util.tables.users,
+    TableName: db.tables.users,
     Key: { id: contributorId },
     UpdateExpression: 'set #tok = #tok + :t, #rep = #rep + :r',
     ExpressionAttributeNames: {'#tok' : 'tokens', '#rep' : 'reputation'},
@@ -364,7 +345,7 @@ function rewardContributor(contributorId, contributionScore, totalSystemRep, cb)
 function getTotalRep(cb) {
 
   var params = {
-    TableName : util.tables.caching,
+    TableName : db.tables.caching,
     Key: { type: "totalRepInSystem" }
   };
 
@@ -381,7 +362,7 @@ function getTotalRep(cb) {
 function getUserIdByContributionId(winningContributionId, cb) {
 
   var params = {
-    TableName : util.tables.contributions,
+    TableName : db.tables.contributions,
     Key: { id: winningContributionId }
   };
 

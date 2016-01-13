@@ -12,9 +12,10 @@ module.exports = {
 var _     = require('underscore');
 var async = require('async');
 var util  = require('../../util');
+var db    = require('../../util/db');
 
 function createUser(event, cb) {
-  util.winston.info(event);
+
   var newUser = {
     "id": util.uuid(),
     "tokens": event.tokens || parseFloat(process.env.USER_INITIAL_TOKENS),
@@ -24,90 +25,63 @@ function createUser(event, cb) {
   };
 
   var params = {
-    TableName : util.tables.users,
+    TableName : db.tables.users,
     Item: newUser
   };
 
-  util.dynamoDoc.put(params, function(err, data) {
-    util.winston.log('info',newUser);
-    return cb(err, newUser);
-  });
-
+  return db.putItem(params, cb, newUser);
 }
 
 function getUser(event, cb) {
 
   var params = {
-    TableName : util.tables.users,
+    TableName : db.tables.users,
     Key: { id: event.id }
   };
 
-  return util.dynamoDoc.get(params, function(err, data) {
-    if (_.isEmpty(data)) {
-      err = '404:Resource not found.';
-      return cb(err);
-    }
-    return cb(err, data.Item);
-  });
+  return db.getItem(params, cb);
 }
 
 function getUserEvaluations(event, cb) {
   var params = {
-    TableName : util.tables.evaluations,
+    TableName : db.tables.evaluations,
     IndexName: 'evaluations-userId-createdAt',
     KeyConditionExpression: 'userId = :hkey',
     ExpressionAttributeValues: { ':hkey': event.id }
   };
 
-  util.dynamoDoc.query(params, function(err, data) {
-    if (_.isEmpty(data.Items)) {
-      err = '404:Resource not found.';
-      return cb(err);
-    }
-    return cb(err, data.Items);
-  });
+  return db.query(params, cb);
 }
 
 function getUserContributions(event, cb) {
 
   var params = {
-    TableName : util.tables.contributions,
+    TableName : db.tables.contributions,
     IndexName: 'contributions-by-userId-index',
     KeyConditionExpression: 'userId = :hkey',
     ExpressionAttributeValues: {
       ':hkey': event.id
     }
   };
-  util.dynamoDoc.query(params, function(err, data) {
-    if (_.isEmpty(data.Items)) {
-      err = '404:Resource not found.';
-      return cb(err);
-    }
-    return cb(err, data.Items);
-  });
+
+  return db.query(params, cb);
 }
 
 function deleteUser(event, cb) {
-  util.winston.info(event);
+
   var params = {
-    TableName : util.tables.users,
+    TableName : db.tables.users,
     Key: { id: event.id },
     ReturnValues: 'ALL_OLD'
   };
-  return util.dynamoDoc.delete(params, function(err, data) {
-    util.winston.info(err, data);
-    if (_.isEmpty(data)) {
-      err = '404:Resource not found.';
-      return cb(err);
-    }
-    return cb(err, data.Attributes);
-  });
+
+  return db.deleteItem(params, cb);
 }
 
 function updateUser(event, cb) {
 
   var params = {
-    TableName: util.tables.users,
+    TableName: db.tables.users,
     Key: {
       id: event.id
     },
@@ -120,7 +94,5 @@ function updateUser(event, cb) {
     ReturnValues: 'ALL_NEW'
   };
 
-  return util.dynamoDoc.update(params, function(err, data) {
-    return cb(err, data.Attributes);
-  });
+  return db.updateItem(params, cb);
 }
