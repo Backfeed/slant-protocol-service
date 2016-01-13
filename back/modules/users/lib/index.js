@@ -14,6 +14,7 @@ var async = require('async');
 var util  = require('../../util');
 
 function createUser(event, cb) {
+  util.winston.info(event);
   var newUser = {
     "id": util.uuid(),
     "tokens": event.tokens || parseFloat(process.env.USER_INITIAL_TOKENS),
@@ -87,12 +88,19 @@ function getUserContributions(event, cb) {
 }
 
 function deleteUser(event, cb) {
+  util.winston.info(event);
   var params = {
     TableName : util.tables.users,
-    Key: { id: event.id }
+    Key: { id: event.id },
+    ReturnValues: 'ALL_OLD'
   };
   return util.dynamoDoc.delete(params, function(err, data) {
-    return cb(err, params.Key);
+    util.winston.info(err, data);
+    if (_.isEmpty(data)) {
+      err = '404:Resource not found.';
+      return cb(err);
+    }
+    return cb(err, data.Attributes);
   });
 }
 
