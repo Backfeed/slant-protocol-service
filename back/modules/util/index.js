@@ -2,13 +2,11 @@
 
 var logger = require('./logger');
 var _      = require('underscore');
-var AWS    = require('aws-sdk');
 var uuid   = require('node-uuid');
 var math   = require('mathjs');
 
 var util = {
   tables: getTables(),
-  dynamoDoc: getDynamoDoc(),
   uuid: uuid.v4,
   sumRep: sumRep,
   math: math,
@@ -29,18 +27,9 @@ function getTables() {
   };
 }
 
-function getDynamoDoc() {
-  var dynamoConfig = {
-    sessionToken:    process.env.AWS_SESSION_TOKEN,
-    region:          process.env.AWS_REGION
-  };
-
-  return new AWS.DynamoDB.DocumentClient(dynamoConfig);
-}
-
 function sumRep(users) {
   return _.reduce(users, function(memo, user) {
-    return memo + user.reputation;
+    return math.add(memo, user.reputation);
   }, 0);
 }
 
