@@ -160,9 +160,7 @@ function deleteItemsFromDb(xs, table, cb) {
       Key: { id: x.id }
     };
 
-    return util.dynamoDoc.delete(params, function(err, data) {
-      return asyncCB(err, params.key);
-    });
+    db.del(params, asyncCB);
 
   }, function(err) {
     cb(err, xs.length + ' ' + table + ' deleted');
