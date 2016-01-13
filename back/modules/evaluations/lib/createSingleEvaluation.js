@@ -101,7 +101,7 @@ module.exports.execute = function(event, cb) {
 
 }
 
-function updateEvaluatorsRepToDb(evaluators, callback) {
+function updateEvaluatorsRepToDb(evaluators, cb) {
   var params = {
     TableName: db.tables.users,
     RequestItems: {},
@@ -117,9 +117,8 @@ function updateEvaluatorsRepToDb(evaluators, callback) {
   });
 
   params.RequestItems[db.tables.users] = submittedEvaluators;
-  util.dynamoDoc.batchWrite(params, function(err, data) {
-    callback(err, data);
-  });
+  
+  return db.batchWrite(params, cb);
 }
 
 function getEvaluations(contributionId, cb) {
@@ -151,7 +150,5 @@ function getEvaluators(evaluations, cb) {
     Keys: Keys
   };
 
-  util.dynamoDoc.batchGet(params, function(err, data) {
-    return cb(err, data.Responses[db.tables.users]);
-  });
+  return db.batchGet(params, cb, db.tables.users);
 }

@@ -38,7 +38,7 @@ function get(params, cb) {
 }
 
 function query(params, cb) {
-  dynamoDoc.query(params, function(err, data) {
+  return dynamoDoc.query(params, function(err, data) {
     if (_.isEmpty(data)) return cb(notFoundMsg);
     return cb(err, data.Items);
   });
@@ -65,13 +65,13 @@ function del(params, cb) {
 }
 
 function batchGet(params, cb, table) {
-  dynamoDoc.batchGet(params, function(err, data) {
+  return dynamoDoc.batchGet(params, function(err, data) {
     return cb(err, data.Responses[table]);
   });
 }
 
 function batchWrite(params, cb, responseValue) {
-  dynamoDoc.batchWrite(params, function(err, data) {
+  return dynamoDoc.batchWrite(params, function(err, data) {
     return cb(err, responseValue);
   });
 }

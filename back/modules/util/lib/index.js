@@ -4,13 +4,13 @@ module.exports = {
   cleanseDb: cleanseDb,
   syncCachedSystemRep: syncCachedSystemRep,
   cacheTotalUsersRep: cacheTotalUsersRep,
-  addToCachedRep: addToCachedRep,
   updateCachedRep: updateCachedRep
 };
 
-var _        = require('underscore');
-var async    = require('async');
-var util     = require('../');
+var _     = require('underscore');
+var async = require('async');
+var util  = require('../');
+var db    = require('../db')
 
 function updateCachedRep(event, cb) {
 
@@ -23,10 +23,7 @@ function updateCachedRep(event, cb) {
     ReturnValues: 'ALL_NEW'
   };
 
-  return util.dynamoDoc.update(params, function(err, data) {
-    return cb(err, data.Attributes.theValue);
-  });
-
+  return db.update(params, cb);
 }
 
 function addToCachedRep(reputation, cb) {
@@ -39,25 +36,30 @@ function addToCachedRep(reputation, cb) {
     ReturnValues: 'ALL_NEW'
   };
 
-  return util.dynamoDoc.update(params, function(err, data) {
-    return cb(err, data.Attributes.theValue);
-  });
+  return db.update(params, cb);
 }
 
 function cacheTotalUsersRep(event, cb) {
 
-  var paramsForQueringUsers = {
+  var params = {
     TableName: util.tables.users,
     ProjectionExpression:"reputation",
     ConsistentRead: true,
     ReturnConsumedCapacity: "TOTAL"
   };
 
-  util.dynamoDoc.scan(paramsForQueringUsers, function(err, data) {
-    if (err) return cb(err);
-    var totalRep = util.sumRep(data.Items);
-    updateCachedRep({ reputation: totalRep }, cb);
-  });
+  async.waterfall([
+    function(waterfallCB) {
+      util.dynamoDoc.scan(params, function(err, data) {
+        if (err) return cb(err);
+        var totalRep = util.sumRep(data.Items);
+        waterfallCB(totalRep);
+      });
+    },
+    function(totalRep, waterfallCB) {
+      updateCachedRep({ reputation: totalRep }, cb);
+    }
+  ]);
 
 }
 

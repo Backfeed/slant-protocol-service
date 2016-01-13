@@ -139,10 +139,7 @@ function getUsersByEvaluations(evaluations, callback) {
     Keys: Keys
   };
 
-  //db.batchGet(params, callback, db.tables.users);
-  util.dynamoDoc.batchGet(params, function(err, data) {
-    return callback(err, data.Responses[db.tables.users]);
-  });
+  return db.batchGet(params, callback, db.tables.users);
 }
 
 function getBiddingContributions(event, cb) {
@@ -235,7 +232,7 @@ function endBidding(event, cb) {
           getBiddingWinningContribution(biddingId, parallelCB);
         }
       }, function(err, results) {
-        totalSystemRep = results.totalSystemRep;
+        totalSystemRep = results.totalSystemRep.theValue;
         winningContributionId = results.winningContribution.id
         winningContributionScore = results.winningContribution.score
         waterfallCB(err, null);
@@ -243,21 +240,21 @@ function endBidding(event, cb) {
     },
 
     function(emptyResult, waterfallCB) {
-      getUserIdByContributionId(winningContributionId, waterfallCB);
+      getwinningContribution(winningContributionId, waterfallCB);
     },
 
-    function(winningContributorId) {
+    function(winningContribution) {
       async.parallel({
         endBiddingInDb: function(parallelCB) {
           endBiddingInDb(biddingId, winningContributionId, parallelCB);
         },
         rewardContributor: function(parallelCB) {
-          rewardContributor(winningContributorId, winningContributionScore, totalSystemRep, parallelCB);
+          rewardContributor(winningContribution.userId, winningContributionScore, totalSystemRep, parallelCB);
         }
       }, function(err, results) {
         var bidding = results.endBiddingInDb;
-        bidding.winningContributorId = winningContributorId
-        cb(err, bidding);
+        bidding.winningContributorId = winningContribution.userId
+        return cb(err, bidding);
       });
     }
   ]);
@@ -302,9 +299,7 @@ function endBiddingInDb(id, winningContributionId, cb) {
     ReturnValues: 'ALL_NEW'
   };
 
-  return util.dynamoDoc.update(params, function(err, data) {
-    return cb(err, data.Attributes);
-  });
+  return db.update(params, cb);
 }
 
 function rewardContributor(contributorId, contributionScore, totalSystemRep, cb) {
@@ -319,9 +314,7 @@ function rewardContributor(contributorId, contributionScore, totalSystemRep, cb)
     },
     ReturnValues: 'ALL_NEW'
   };
-  return util.dynamoDoc.update(params, function(err, data) {
-    return cb(err, data.Attributes);
-  });
+  return db.update(params, cb);
 }
 
 function getTotalRep(cb) {
@@ -331,29 +324,16 @@ function getTotalRep(cb) {
     Key: { type: "totalRepInSystem" }
   };
 
-  return util.dynamoDoc.get(params, function(err, data) {
-    if (_.isEmpty(data)) {
-      err = '404:Resource not found.';
-      return cb(err);
-    }
-    return cb(err, data.Item.theValue);
-  });
-
+  return db.get(params, cb);
 }
 
-function getUserIdByContributionId(winningContributionId, cb) {
+function getwinningContribution(winningContributionId, cb) {
 
   var params = {
     TableName : db.tables.contributions,
     Key: { id: winningContributionId }
   };
 
-  return util.dynamoDoc.get(params, function(err, data) {
-    if (_.isEmpty(data)) {
-      err = '404:Resource not found.';
-      return cb(err);
-    }
-    return cb(err, data.Item.userId);
-  });
+  return db.get(params, cb);
 
 }

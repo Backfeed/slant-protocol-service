@@ -79,7 +79,6 @@ function deleteUser(event, cb) {
 }
 
 function updateUser(event, cb) {
-
   var params = {
     TableName: db.tables.users,
     Key: {
