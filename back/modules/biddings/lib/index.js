@@ -216,7 +216,7 @@ function getUserEvaluations(event, cb) {
 
 function endBidding(event, cb) {
   var biddingId = event.id;
-  var totalSystemRep;
+  var cachedRep;
   var winningContributionId;
   var winningContributionScore;
   var winningContributorId;
@@ -225,14 +225,14 @@ function endBidding(event, cb) {
 
     function(waterfallCB) {
       async.parallel({
-        totalSystemRep: function(parallelCB) {
-          getTotalRep(parallelCB);
+        cachedRep: function(parallelCB) {
+          getCachedRep(parallelCB);
         },
         winningContribution: function(parallelCB) {
           getBiddingWinningContribution(biddingId, parallelCB);
         }
       }, function(err, results) {
-        totalSystemRep = results.totalSystemRep.theValue;
+        cachedRep = results.cachedRep.theValue;
         winningContributionId = results.winningContribution.id
         winningContributionScore = results.winningContribution.score
         waterfallCB(err, null);
@@ -249,7 +249,7 @@ function endBidding(event, cb) {
           endBiddingInDb(biddingId, winningContributionId, parallelCB);
         },
         rewardContributor: function(parallelCB) {
-          rewardContributor(winningContribution.userId, winningContributionScore, totalSystemRep, parallelCB);
+          rewardContributor(winningContribution.userId, winningContributionScore, cachedRep, parallelCB);
         }
       }, function(err, results) {
         var bidding = results.endBiddingInDb;
@@ -302,22 +302,22 @@ function endBiddingInDb(id, winningContributionId, cb) {
   return db.update(params, cb);
 }
 
-function rewardContributor(contributorId, contributionScore, totalSystemRep, cb) {
+function rewardContributor(contributorId, contributionScore, cachedRep, cb) {
   var params = {
     TableName: db.tables.users,
     Key: { id: contributorId },
     UpdateExpression: 'set #tok = #tok + :t, #rep = #rep + :r',
     ExpressionAttributeNames: {'#tok' : 'tokens', '#rep' : 'reputation'},
     ExpressionAttributeValues: {
-      ':t' : 10 * contributionScore / totalSystemRep,
-      ':r' : 10 * contributionScore / totalSystemRep
+      ':t' : 10 * contributionScore / cachedRep,
+      ':r' : 10 * contributionScore / cachedRep
     },
     ReturnValues: 'ALL_NEW'
   };
   return db.update(params, cb);
 }
 
-function getTotalRep(cb) {
+function getCachedRep(cb) {
 
   var params = {
     TableName : db.tables.caching,

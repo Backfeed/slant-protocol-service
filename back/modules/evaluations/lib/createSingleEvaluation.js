@@ -18,7 +18,7 @@ module.exports.execute = function(event, cb) {
     newRep: 0,
     voteRep: 0,
     contributionRep: 0,
-    systemRep: 0
+    cachedRep: 0
   });
 
   var startTime = new Date().getTime();
@@ -31,7 +31,7 @@ module.exports.execute = function(event, cb) {
 
     function(waterfallCB) {
       async.parallel({
-        systemRep: function(parallelCB) {
+        cachedRep: function(parallelCB) {
           getCachedRep(parallelCB);
         },
         evaluations: function(parallelCB) {
@@ -45,8 +45,8 @@ module.exports.execute = function(event, cb) {
     },
 
     function(results, waterfallCB) {
-      iMap = iMap.set('systemRep', results.systemRep.theValue);
-      util.log.debug('systemRep', iMap.get('systemRep'));
+      iMap = iMap.set('cachedRep', results.cachedRep.theValue);
+      util.log.debug('cachedRep', iMap.get('cachedRep'));
       evaluations = results.evaluations;
 
       var currentUserFormerEvaluation = _.findWhere(evaluations, { userId: event.userId });
@@ -82,7 +82,7 @@ module.exports.execute = function(event, cb) {
         value: event.value,
         evaluators: evaluators,
         evaluations: evaluations,
-        systemRep: iMap.get('systemRep')
+        cachedRep: iMap.get('cachedRep')
       };
 
       evaluators = protocol.evaluate(data);
