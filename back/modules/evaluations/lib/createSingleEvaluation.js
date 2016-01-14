@@ -9,10 +9,6 @@ var getCachedRep = require('../../util/getcachedrep/func');
 var Immutable = require('immutable');
 var protocol  = require('backfeed-slant-protocol');
 
-var stake = 0.05;
-var alpha = 0.5;
-var beta = 0.7;
-
 // Lambda Handler
 module.exports.execute = function(event, cb) {
 
