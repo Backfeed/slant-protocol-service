@@ -66,16 +66,16 @@ function getBiddingWithLeadingContribution(event, cb) {
 function getBiddingWinningContribution(biddingId, cb) {
   var evaluations;
   async.waterfall([
-    function(callback) {
-      getPositiveEvaluationsByBiddingId(biddingId, callback);
+    function(waterfallCB) {
+      getPositiveEvaluationsByBiddingId(biddingId, waterfallCB);
     },
-    function(response, callback) {
+    function(response, waterfallCB) {
       evaluations = response;
-      getUsersByEvaluations(evaluations, callback);
+      getUsersByEvaluations(evaluations, waterfallCB);
     },
-    function(response, callback) {
+    function(response, waterfallCB) {
       var users = response;
-      calcWinningContribution(users, evaluations, callback);
+      calcWinningContribution(users, evaluations, waterfallCB);
     }
   ],
     function(err, result) {
@@ -84,7 +84,7 @@ function getBiddingWinningContribution(biddingId, cb) {
   );
 }
 
-function calcWinningContribution(users, evaluations, callback) {
+function calcWinningContribution(users, evaluations, cb) {
   var scores = {};
   _.each(evaluations, function(evaluation) {
     if (!scores[evaluation.contributionId])
@@ -97,7 +97,7 @@ function calcWinningContribution(users, evaluations, callback) {
     id: winningContribution[0],
     score: winningContribution[1]
   };
-  callback(null, winningContribution);
+  cb(null, winningContribution);
 }
 
 function getUserRep(users, userId) {
@@ -122,7 +122,7 @@ function getPositiveEvaluationsByBiddingId(biddingId, cb) {
   return db.query(params, cb);
 }
 
-function getUsersByEvaluations(evaluations, callback) {
+function getUsersByEvaluations(evaluations, cb) {
   var params = {
     RequestItems: {}
   };
@@ -139,7 +139,7 @@ function getUsersByEvaluations(evaluations, callback) {
     Keys: Keys
   };
 
-  return db.batchGet(params, callback, db.tables.users);
+  return db.batchGet(params, cb, db.tables.users);
 }
 
 function getBiddingContributions(event, cb) {
@@ -147,14 +147,14 @@ function getBiddingContributions(event, cb) {
   var contributions;
   var evaluations;
   async.waterfall([
-    function(callback) {
-      getContributions(event, callback);
+    function(waterfallCB) {
+      getContributions(event, waterfallCB);
     },
-    function(result, callback) {
+    function(result, waterfallCB) {
       contributions = result;
-      getUserEvaluations(event, callback);
+      getUserEvaluations(event, waterfallCB);
     },
-    function(result, callback) {
+    function(result, waterfallCB) {
       evaluations = result.items;
       if (contributions && event.userId)
       {
@@ -168,7 +168,7 @@ function getBiddingContributions(event, cb) {
           }
         });
       }
-      callback(null, contributions);
+      waterfallCB(null, contributions);
     }
   ], function (err, result) {
     return cb(null, result);
@@ -189,8 +189,8 @@ function getContributions(event, cb) {
 
 function getBiddingUserEvaluations(event, cb) {
   async.waterfall([
-    function(callback) {
-      getUserEvaluations(event, callback);
+    function(waterfallCB) {
+      getUserEvaluations(event, waterfallCB);
     }
   ], function (err, result) {
     if (_.isEmpty(result)) {
