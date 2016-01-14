@@ -10,7 +10,8 @@ module.exports = {
   bidding: {
     create: createBidding,
     get: getBidding,
-    delete: deleteBidding
+    delete: deleteBidding,
+    end: endBidding
   },
 
   contribution: {
@@ -54,6 +55,7 @@ function deleteUser(id) { return chakram.delete(URL + '/users/' + id, {}, params
 function createBidding() { return chakram.post(URL + '/biddings/', {}, params) };
 function getBidding(id) { return chakram.get(URL + '/biddings/' + id, params) };
 function deleteBidding(id) { return chakram.delete(URL + '/biddings/' + id, {}, params) };
+function endBidding(id) { return chakram.put(URL + '/biddings/' + id, {}, params) };
 
 function createContribution(body) { return chakram.post(URL + '/contributions/', body, params) };
 function getContribution(id) { return chakram.get(URL + '/contributions/' + id, params) };
