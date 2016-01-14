@@ -14,6 +14,7 @@
   "dependencies": {
     "async": "1.5.1",
     "aws-sdk": "^2.2.26",
+    "immutable": "3.7.6",
     "mathjs": "2.5.0",
     "node-uuid": "^1.4.7",
     "serverless-helpers-js": "~0.0.3",

@@ -7,7 +7,7 @@ var util      = require('../../util');
 var db        = require('../../util/db');
 var getCachedRep = require('../../util/getcachedrep/func');
 var Immutable = require('immutable');
-var protocol  = require('backfeed-slant-protocol');
+var protocol  = require('../../util/protocol');
 
 // Lambda Handler
 module.exports.execute = function(event, cb) {
@@ -77,15 +77,7 @@ module.exports.execute = function(event, cb) {
     function(result, waterfallCB) {
       evaluators = result;
 
-      var data = {
-        uid: event.userId,
-        value: event.value,
-        evaluators: evaluators,
-        evaluations: evaluations,
-        cachedRep: iMap.get('cachedRep')
-      };
-
-      evaluators = protocol.evaluate(data);
+      evaluators = protocol.evaluate(event.userId, event.value, evaluators, evaluations, iMap.get('cachedRep'));
 
       updateEvaluatorsRepToDb(evaluators, waterfallCB);
     },
