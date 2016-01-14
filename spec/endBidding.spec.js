@@ -71,6 +71,15 @@ describe('end bidding', function() {
         expect(bidding.createdAt).to.be.a('number');
         expect(bidding.endedAt).to.be.a('number');
         expect(bidding.endedAt).to.be.greaterThan(bidding.createdAt);
+        return chakram.wait();
+      });
+  });
+
+  it('should reject ending a Completed bidding', function() {
+    return util.bidding.end(biddingId)
+      .then(function(res) {
+        expect(res.body).to.be.equal('Internal Server Error');
+        return chakram.wait();
       });
   });
 

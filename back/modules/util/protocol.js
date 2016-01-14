@@ -8,7 +8,8 @@ var BETA = 1;
 var ROUND_TO = 6;
 
 module.exports = {
-  evaluate: evaluate
+  evaluate: evaluate,
+  calcReward: calcReward
 }
 
 function evaluate(uid, value, evaluators, evaluations, cahedRep) {
@@ -122,4 +123,11 @@ function cleanupEvaluators(evaluators) {
 
 function round(n) {
   return math.round(n, ROUND_TO);
+}
+
+function calcReward(winningContributionScore, cachedRep) {
+  return {
+    reputation: 10 * winningContributionScore / cachedRep,
+    tokens: 10 * winningContributionScore / cachedRep
+  }
 }

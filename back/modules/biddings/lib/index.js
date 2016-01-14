@@ -7,14 +7,16 @@ module.exports = {
   getBiddingUserEvaluations: getBiddingUserEvaluations,
   endBidding: endBidding,
   getContributions: getContributions,
-  deleteBidding: deleteBidding,
-  getWinningContribution: getWinningContribution
+  deleteBidding: deleteBidding
 };
 
-var _     = require('underscore');
-var async = require('async');
-var util  = require('../../util');
-var db    = require('../../util/db');
+var _               = require('underscore');
+var async           = require('async');
+var util            = require('../../util');
+var db              = require('../../util/db');
+var protocol        = require('../../util/protocol');
+var getCachedRep    = require('../../util/getcachedrep');
+var contributionLib = require('../../contributions/lib');
 
 function createBidding(event, cb) {
 
@@ -48,7 +50,7 @@ function getBiddingWithLeadingContribution(event, cb) {
       getBidding(event, parallelCB);
     },
     winningContribution: function(parallelCB) {
-      getBiddingWinningContribution(event.id, parallelCB);
+      getWinningContribution(event.id, parallelCB);
     }
   },
     function(err, results) {
@@ -63,18 +65,17 @@ function getBiddingWithLeadingContribution(event, cb) {
   );
 }
 
-function getBiddingWinningContribution(biddingId, cb) {
+function getWinningContribution(biddingId, cb) {
   var evaluations;
   async.waterfall([
     function(waterfallCB) {
-      getPositiveEvaluationsByBiddingId(biddingId, waterfallCB);
+      getPositiveEvaluations(biddingId, waterfallCB);
     },
     function(response, waterfallCB) {
       evaluations = response;
       getUsersByEvaluations(evaluations, waterfallCB);
     },
-    function(response, waterfallCB) {
-      var users = response;
+    function(users, waterfallCB) {
       calcWinningContribution(users, evaluations, waterfallCB);
     }
   ],
@@ -90,7 +91,7 @@ function calcWinningContribution(users, evaluations, cb) {
     if (!scores[evaluation.contributionId])
       scores[evaluation.contributionId] = 0;
 
-    scores[evaluation.contributionId] += getUserRep(users, evaluation.userId);
+    scores[evaluation.contributionId] += _.findWhere(users, { id: evaluation.userId }).reputation;
   });
   var winningContribution = _.max(_.pairs(scores), _.last);
   winningContribution = {
@@ -100,14 +101,7 @@ function calcWinningContribution(users, evaluations, cb) {
   cb(null, winningContribution);
 }
 
-function getUserRep(users, userId) {
-  var user = _.find(users, function(u) {
-    return u.id === userId;
-  });
-  return user.reputation;
-}
-
-function getPositiveEvaluationsByBiddingId(biddingId, cb) {
+function getPositiveEvaluations(biddingId, cb) {
   var params = {
     TableName : db.tables.evaluations,
     IndexName: 'evaluations-biddingId-value',
@@ -229,9 +223,13 @@ function endBidding(event, cb) {
           getCachedRep(parallelCB);
         },
         winningContribution: function(parallelCB) {
-          getBiddingWinningContribution(biddingId, parallelCB);
+          getWinningContribution(biddingId, parallelCB);
+        },
+        bidding: function(parallelCB) {
+          getBidding({ id: event.id }, parallelCB);
         }
       }, function(err, results) {
+        if(results.bidding.status === 'Completed') return cb('400: bad request. bidding is completed!');
         cachedRep = results.cachedRep.theValue;
         winningContributionId = results.winningContribution.id
         winningContributionScore = results.winningContribution.score
@@ -240,7 +238,7 @@ function endBidding(event, cb) {
     },
 
     function(emptyResult, waterfallCB) {
-      getwinningContribution(winningContributionId, waterfallCB);
+      contributionLib.getContribution({ id: winningContributionId }, waterfallCB);
     },
 
     function(winningContribution) {
@@ -249,7 +247,8 @@ function endBidding(event, cb) {
           endBiddingInDb(biddingId, winningContributionId, parallelCB);
         },
         rewardContributor: function(parallelCB) {
-          rewardContributor(winningContribution.userId, winningContributionScore, cachedRep, parallelCB);
+          var prize = protocol.calcReward(winningContributionScore, cachedRep);
+          rewardContributor(winningContribution.userId, prize.reputation, prize.tokens, parallelCB);
         }
       }, function(err, results) {
         var bidding = results.endBiddingInDb;
@@ -269,16 +268,6 @@ function deleteBidding(event, cb) {
   };
 
   return db.del(params, cb);
-}
-
-function getWinningContribution(contributionId) {
-
-  var params = {
-    TableName : contributionTableName,
-    Key: { id:contributionId }
-  };
-
-  return db.get(params, cb);
 }
 
 function endBiddingInDb(id, winningContributionId, cb) {
@@ -302,38 +291,17 @@ function endBiddingInDb(id, winningContributionId, cb) {
   return db.update(params, cb);
 }
 
-function rewardContributor(contributorId, contributionScore, cachedRep, cb) {
+function rewardContributor(contributorId, reputation, tokens, cb) {
   var params = {
     TableName: db.tables.users,
     Key: { id: contributorId },
     UpdateExpression: 'set #tok = #tok + :t, #rep = #rep + :r',
     ExpressionAttributeNames: {'#tok' : 'tokens', '#rep' : 'reputation'},
     ExpressionAttributeValues: {
-      ':t' : 10 * contributionScore / cachedRep,
-      ':r' : 10 * contributionScore / cachedRep
+      ':t' : tokens,
+      ':r' : reputation
     },
     ReturnValues: 'ALL_NEW'
   };
   return db.update(params, cb);
-}
-
-function getCachedRep(cb) {
-
-  var params = {
-    TableName : db.tables.caching,
-    Key: { type: "totalRepInSystem" }
-  };
-
-  return db.get(params, cb);
-}
-
-function getwinningContribution(winningContributionId, cb) {
-
-  var params = {
-    TableName : db.tables.contributions,
-    Key: { id: winningContributionId }
-  };
-
-  return db.get(params, cb);
-
 }

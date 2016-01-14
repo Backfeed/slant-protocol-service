@@ -5,7 +5,7 @@ var _         = require('underscore');
 var async     = require('async');
 var util      = require('../../util');
 var db        = require('../../util/db');
-var getCachedRep = require('../../util/getcachedrep/func');
+var getCachedRep = require('../../util/getcachedrep');
 var Immutable = require('immutable');
 var protocol  = require('../../util/protocol');
 
