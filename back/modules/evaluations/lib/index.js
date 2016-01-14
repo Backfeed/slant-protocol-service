@@ -23,11 +23,10 @@ function createEvaluation(event, cb) {
 
   var submittedEvaluations = [];
   var responseArr = [];
-  var newEvaluation;
   var dbEvaluationWrapper;
 
   async.each(event.evaluations, function(element, eachCB) {
-    newEvaluation = {
+    var newEvaluation = {
       "userId": event.userId,
       "biddingId": event.biddingId,
       "contributionId": element.contributionId,
@@ -58,7 +57,7 @@ function createEvaluation(event, cb) {
     );
 
   }, function(err) {
-    console.log('iterate done');
+    util.log.debug('iterate done');
     params.RequestItems[db.tables.evaluations] = submittedEvaluations;
     db.batchWrite(params, cb, responseArr);
   });
