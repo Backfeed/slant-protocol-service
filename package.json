@@ -4,8 +4,9 @@
   "description": "A Backfeed Protocol for Slant",
   "scripts": {
     "test": "mocha spec",
-    "localtest": "mocha spec -w",
-    "sanity": "mocha **/basicApi.spec.js -w",
+    "localtest": "mocha spec",
+    "sanity": "mocha **/basicApi.spec.js",
+    "endBidding": "mocha spec/endBidding.spec.js",
     "start": "npm run localtest"
   },
   "repository": {
