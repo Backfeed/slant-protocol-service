@@ -67,7 +67,7 @@ function getCachedRep() { return chakram.get(URL + '/util/getcachedrep/', {}, pa
 
 function createUsers(n) {
   var responses = [];
-  _.times(5, function(n) {
+  _.times(n, function(n) {
     responses.push(createUser());
   });
 
