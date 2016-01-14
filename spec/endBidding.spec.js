@@ -83,4 +83,12 @@ describe('end bidding', function() {
       });
   });
 
+  it('should reject submitting a contribution to a Completed bidding', function() {
+    return util.contribution.create({ biddingId: biddingId, userId: p1.id })
+      .then(function(res) {
+        expect(res.body).to.be.equal('Internal Server Error');
+        return chakram.wait();
+      });
+  });
+
 });

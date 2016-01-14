@@ -6,6 +6,7 @@ module.exports = {
   getBiddingContributions: getBiddingContributions,
   getBiddingUserEvaluations: getBiddingUserEvaluations,
   endBidding: endBidding,
+  getBidding: getBidding,
   getContributions: getContributions,
   deleteBidding: deleteBidding
 };

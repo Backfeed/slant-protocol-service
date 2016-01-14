@@ -8,9 +8,11 @@ module.exports = {
   deleteContribution: deleteContribution
 };
 
-var _     = require('underscore');
-var util  = require('../../util');
-var db    = require('../../util/db');
+var _          = require('underscore');
+var async      = require('async');
+var util       = require('../../util');
+var db         = require('../../util/db');
+var biddingLib = require('../../biddings/lib');
 
 function createContribution(event, cb) {
 
@@ -26,7 +28,16 @@ function createContribution(event, cb) {
     Item: newContribution
   };
 
-  return db.put(params, cb, newContribution);
+  async.waterfall([
+    function(waterfallCB) {
+      biddingLib.getBidding({ id: event.biddingId }, waterfallCB);
+    },
+    function(bidding, waterfallCB) {
+      if (bidding.status === 'Completed') return cb(new Error('400. bad request. bidding is complete, no more contriutions please!'));
+      return db.put(params, cb, newContribution);
+    }
+  ]);
+
 }
 
 function getContribution(event, cb) {
