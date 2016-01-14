@@ -107,7 +107,7 @@ function getUserRep(users, userId) {
   return user.reputation;
 }
 
-function getPositiveEvaluationsByBiddingId(biddingId, callback) {
+function getPositiveEvaluationsByBiddingId(biddingId, cb) {
   var params = {
     TableName : db.tables.evaluations,
     IndexName: 'evaluations-biddingId-value',
