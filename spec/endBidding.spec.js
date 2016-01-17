@@ -60,6 +60,21 @@ describe('end bidding', function() {
       });
   });
 
+  it('should get bidding with score', function() {
+    return util.bidding.get(biddingId)
+      .then(function(res) {
+        var bidding = res.body;
+        expect(bidding.id).to.be.equal(biddingId);
+        expect(bidding.status).to.be.equal('InProgress');
+        expect(bidding.winningContributionId).to.be.a('string');
+        expect(bidding.winningContributionId).to.have.length.above(30);
+        expect(bidding.createdAt).to.be.a('number');
+        expect(bidding.endedAt).to.be.undefined;
+        expect(bidding.winningContributionScore).to.be.equal(0.404248);
+        return chakram.wait();
+      });
+  });
+
   it('should declare contribution1 as winner and reward p1', function() {
     return util.bidding.end(biddingId)
       .then(function(res) {
@@ -71,6 +86,11 @@ describe('end bidding', function() {
         expect(bidding.createdAt).to.be.a('number');
         expect(bidding.endedAt).to.be.a('number');
         expect(bidding.endedAt).to.be.greaterThan(bidding.createdAt);
+        return util.user.get(p1.id);
+      }).then(function(res) {
+        p1 = res.body;
+        expect(p1.tokens).to.be.equal(21);
+        expect(p1.reputation).to.be.equal(10.202124);
         return chakram.wait();
       });
   });
@@ -78,6 +98,7 @@ describe('end bidding', function() {
   it('should reject ending a Completed bidding', function() {
     return util.bidding.end(biddingId)
       .then(function(res) {
+        // TODO :: change to status code 400 and proper error message after handling error responses
         expect(res.body).to.be.equal('Internal Server Error');
         return chakram.wait();
       });
@@ -86,6 +107,7 @@ describe('end bidding', function() {
   it('should reject submitting a contribution to a Completed bidding', function() {
     return util.contribution.create({ biddingId: biddingId, userId: p1.id })
       .then(function(res) {
+        // TODO :: change to status code 400 and proper error message after handling error responses
         expect(res.body).to.be.equal('Internal Server Error');
         return chakram.wait();
       });
