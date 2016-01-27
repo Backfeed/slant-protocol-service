@@ -41,8 +41,8 @@ var _ = require('underscore');
 var chakram = require('chakram');
 var math = require('mathjs');
 
-var URL = 'http://localhost:1465';
-//var URL = 'https://api.backfeed.cc/dev';
+//var URL = 'http://localhost:1465';
+var URL = 'https://api.backfeed.cc/dev';
 
 var params =  {
   headers: { 'x-api-key': process.env.X_API_KEY }

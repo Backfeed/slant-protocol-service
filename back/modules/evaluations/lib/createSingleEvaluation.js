@@ -80,7 +80,7 @@ module.exports.execute = function(event, cb) {
       evaluators = protocol.evaluate(event.userId, event.value, evaluators, evaluations, iMap.get('cachedRep'));
 
       updateEvaluatorsRepToDb(evaluators, waterfallCB);
-    },
+    }
 
   ],
     function(err, result) {
@@ -88,7 +88,7 @@ module.exports.execute = function(event, cb) {
     }
   );
 
-}
+};
 
 function updateEvaluatorsRepToDb(evaluators, cb) {
   var params = {
@@ -106,7 +106,7 @@ function updateEvaluatorsRepToDb(evaluators, cb) {
   });
 
   params.RequestItems[db.tables.users] = submittedEvaluators;
-  
+
   return db.batchWrite(params, cb);
 }
 
