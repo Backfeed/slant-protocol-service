@@ -41,7 +41,7 @@ describe.only("Test protocol according to excel", function() {
       return chakram.wait();
     });
   });
-  
+
   it("should cost tokens for submitting a contribution", function () {
     arr = [
       util.contribution.create({ userId: p1.id , biddingId: biddingId }),
@@ -55,13 +55,13 @@ describe.only("Test protocol according to excel", function() {
       })
       .then(function(res) {
         p1 = res.body;
-        expect(p1.tokens).to.be.equal(11) // TODO :: change for real value after reponse from protocol guys
+        expect(p1.tokens).to.be.equal(11);// TODO :: change for real value after reponse from protocol guys
         return chakram.wait();
       });
   });
 
   it("should distribute rep according to step 1", function() {
-    return util.evaluation.create({ 
+    return util.evaluation.create({
         biddingId: biddingId,
         userId: p1.id,
         evaluations: [{ contributionId: contributionId1, value: 1 }]
@@ -71,10 +71,10 @@ describe.only("Test protocol according to excel", function() {
       })
       .then(function(res) {
         p1 = res.body;
-        expect(p1.reputation).to.be.equal(0.196437);
+        expect(p1.reputation).to.be.closeTo(0.196437, 0.000005);
         return util.getCachedRep()
       }).then(function(res) {
-        expect(res.body.theValue).to.be.equal(0.996437);
+        expect(res.body.theValue).to.be.closeTo(0.996437, 0.000005);
         return chakram.wait();
       });
   });
@@ -95,9 +95,9 @@ describe.only("Test protocol according to excel", function() {
       p1 = res[0].body;
       p2 = res[1].body;
       cachedRep = res[2].body.theValue;
-      expect(p1.reputation).to.be.equal(0.198428);
-      expect(p2.reputation).to.be.equal(0.196452);
-      expect(cachedRep).to.be.equal(0.994880);
+      expect(p1.reputation).to.be.closeTo(0.198428, 0.000005);
+      expect(p2.reputation).to.be.closeTo(0.196452, 0.000005);
+      expect(cachedRep).to.be.closeTo(0.994880, 0.000005);
     });
   });
 
@@ -117,9 +117,9 @@ describe.only("Test protocol according to excel", function() {
       p1 = res[0].body;
       p2 = res[1].body;
       cachedRep = res[2].body.theValue;
-      expect(p1.reputation).to.be.equal(0.194881);
-      expect(p2.reputation).to.be.equal(0.196452);
-      expect(cachedRep).to.be.equal(0.991333);
+      expect(p1.reputation).to.be.closeTo(0.194881, 0.000005);
+      expect(p2.reputation).to.be.closeTo(0.196452, 0.000005);
+      expect(cachedRep).to.be.closeTo(0.991333, 0.000005);
     });
   });
 
@@ -141,10 +141,10 @@ describe.only("Test protocol according to excel", function() {
       p2 = res[1].body;
       p3 = res[2].body;
       cachedRep = res[3].body.theValue;
-      expect(p1.reputation).to.be.equal(0.200013);
-      expect(p2.reputation).to.be.equal(0.198454);
-      expect(p3.reputation).to.be.equal(0.195165);
-      expect(cachedRep).to.be.equal(0.993632);
+      expect(p1.reputation).to.be.closeTo(0.200013, 0.000005);
+      expect(p2.reputation).to.be.closeTo(0.198454, 0.000005);
+      expect(p3.reputation).to.be.closeTo(0.195165, 0.000005);
+      expect(cachedRep).to.be.closeTo(0.993632, 0.000005);
     });
   });
 
@@ -168,11 +168,11 @@ describe.only("Test protocol according to excel", function() {
       p3 = res[2].body;
       p4 = res[3].body;
       cachedRep = res[4].body.theValue;
-      expect(p1.reputation).to.be.equal(0.204674);
-      expect(p2.reputation).to.be.equal(0.200472);
-      expect(p3.reputation).to.be.equal(0.199713);
-      expect(p4.reputation).to.be.equal(0.194559);
-      expect(cachedRep).to.be.equal(0.999418);
+      expect(p1.reputation).to.be.closeTo(0.204674, 0.000005);
+      expect(p2.reputation).to.be.closeTo(0.200472, 0.000005);
+      expect(p3.reputation).to.be.closeTo(0.199713, 0.000005);
+      expect(p4.reputation).to.be.closeTo(0.194559, 0.000005);
+      expect(cachedRep).to.be.closeTo(0.999418, 0.000005);
     });
   });
 
@@ -198,12 +198,12 @@ describe.only("Test protocol according to excel", function() {
       p4 = res[3].body;
       p5 = res[4].body;
       cachedRep = res[5].body.theValue;
-      expect(p1.reputation).to.be.equal(0.206743);
-      expect(p2.reputation).to.be.equal(0.205699);
-      expect(p3.reputation).to.be.equal(0.201731);
-      expect(p4.reputation).to.be.equal(0.196525);
-      expect(p5.reputation).to.be.equal(0.195114);
-      expect(cachedRep).to.be.equal(1.005812);
+      expect(p1.reputation).to.be.closeTo(0.206743, 0.000005);
+      expect(p2.reputation).to.be.closeTo(0.205699, 0.000005);
+      expect(p3.reputation).to.be.closeTo(0.201731, 0.000005);
+      expect(p4.reputation).to.be.closeTo(0.196525, 0.000005);
+      expect(p5.reputation).to.be.closeTo(0.195114, 0.000005);
+      expect(cachedRep).to.be.closeTo(1.005812, 0.000005);
     });
   });
 
@@ -229,12 +229,12 @@ describe.only("Test protocol according to excel", function() {
       p4 = res[3].body;
       p5 = res[4].body;
       cachedRep = res[5].body.theValue;
-      expect(p1.reputation).to.be.equal(0.212004);
-      expect(p2.reputation).to.be.equal(0.205699);
-      expect(p3.reputation).to.be.equal(0.201731);
-      expect(p4.reputation).to.be.equal(0.191603);
-      expect(p5.reputation).to.be.equal(0.195114);
-      expect(cachedRep).to.be.equal(1.006151);
+      expect(p1.reputation).to.be.closeTo(0.212004, 0.000005);
+      expect(p2.reputation).to.be.closeTo(0.205699, 0.000005);
+      expect(p3.reputation).to.be.closeTo(0.201731, 0.000005);
+      expect(p4.reputation).to.be.closeTo(0.191603, 0.000005);
+      expect(p5.reputation).to.be.closeTo(0.195114, 0.000005);
+      expect(cachedRep).to.be.closeTo(1.006151, 0.000005);
     });
   });
 
@@ -260,12 +260,12 @@ describe.only("Test protocol according to excel", function() {
       p4 = res[3].body;
       p5 = res[4].body;
       cachedRep = res[5].body.theValue;
-      expect(p1.reputation).to.be.equal(0.208466);
-      expect(p2.reputation).to.be.equal(0.205699);
-      expect(p3.reputation).to.be.equal(0.201731);
-      expect(p4.reputation).to.be.equal(0.193643);
-      expect(p5.reputation).to.be.equal(0.195114);
-      expect(cachedRep).to.be.equal(1.004653);
+      expect(p1.reputation).to.be.closeTo(0.208466, 0.000005);
+      expect(p2.reputation).to.be.closeTo(0.205699, 0.000005);
+      expect(p3.reputation).to.be.closeTo(0.201731, 0.000005);
+      expect(p4.reputation).to.be.closeTo(0.193643, 0.000005);
+      expect(p5.reputation).to.be.closeTo(0.195114, 0.000005);
+      expect(cachedRep).to.be.closeTo(1.004653, 0.000005);
     });
   });
 
@@ -291,11 +291,11 @@ describe.only("Test protocol according to excel", function() {
       p4 = res[3].body;
       p5 = res[4].body;
       cachedRep = res[5].body.theValue;
-      expect(p1.reputation).to.be.equal(0.213980);
-      expect(p2.reputation).to.be.equal(0.200749);
-      expect(p3.reputation).to.be.equal(0.201731);
-      expect(p4.reputation).to.be.equal(0.195646);
-      expect(p5.reputation).to.be.equal(0.195114);
+      expect(p1.reputation).to.be.closeTo(0.213980, 0.000005);
+      expect(p2.reputation).to.be.closeTo(0.200749, 0.000005);
+      expect(p3.reputation).to.be.closeTo(0.201731, 0.000005);
+      expect(p4.reputation).to.be.closeTo(0.195646, 0.000005);
+      expect(p5.reputation).to.be.closeTo(0.195114, 0.000005);
     });
   });
 
@@ -321,11 +321,11 @@ describe.only("Test protocol according to excel", function() {
       p4 = res[3].body;
       p5 = res[4].body;
       cachedRep = res[5].body.theValue;
-      expect(p1.reputation).to.be.equal(0.216145);
-      expect(p2.reputation).to.be.equal(0.202780);
-      expect(p3.reputation).to.be.equal(0.196832);
-      expect(p4.reputation).to.be.equal(0.200776);
-      expect(p5.reputation).to.be.equal(0.195114);
+      expect(p1.reputation).to.be.closeTo(0.216145, 0.000005);
+      expect(p2.reputation).to.be.closeTo(0.202780, 0.000005);
+      expect(p3.reputation).to.be.closeTo(0.196832, 0.000005);
+      expect(p4.reputation).to.be.closeTo(0.200776, 0.000005);
+      expect(p5.reputation).to.be.closeTo(0.195114, 0.000005);
     });
   });
 
