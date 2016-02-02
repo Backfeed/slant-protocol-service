@@ -10,7 +10,7 @@ module.exports = {
 var _     = require('underscore');
 var async = require('async');
 var util  = require('../');
-var db    = require('../db')
+var db    = require('../db');
 
 function updateCachedRep(event, cb) {
 

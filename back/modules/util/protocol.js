@@ -10,14 +10,14 @@ var ROUND_TO = 6;
 module.exports = {
   evaluate: evaluate,
   calcReward: calcReward
-}
+};
 
-function evaluate(uid, value, evaluators, evaluations, cahedRep) {
+function evaluate(uid, value, evaluators, evaluations, cachedRep) {
 
-  var iMap = Immutable.Map({ 
+  var iMap = Immutable.Map({
     newRep: 0,
     voteRep: 0,
-    cahedRep: cahedRep
+    cachedRep: cachedRep
   });
 
   evaluators = addVoteValueToEvaluators(evaluators, evaluations);
@@ -25,9 +25,9 @@ function evaluate(uid, value, evaluators, evaluations, cahedRep) {
   iMap = iMap.set('voteRep', getVoteRep(evaluators, value));
 
 
-  evaluators = updateSameEvaluatorsRep(evaluators, iMap.get('newRep'), iMap.get('cahedRep'), iMap.get('voteRep'), value, uid);
+  evaluators = updateSameEvaluatorsRep(evaluators, iMap.get('newRep'), iMap.get('cachedRep'), iMap.get('voteRep'), value, uid);
 
-  evaluators = updateEvaluatorsRep(evaluators, iMap.get('newRep'), iMap.get('cahedRep'));
+  evaluators = updateEvaluatorsRep(evaluators, iMap.get('newRep'), iMap.get('cachedRep'));
 
   evaluators = cleanupEvaluators(evaluators);
 
@@ -39,7 +39,7 @@ function addVoteValueToEvaluators(evaluators, evaluations) {
     evaluator.value = _.find(evaluations, function(evaluation) {
       return evaluation.userId === evaluator.id;
     }).value;
-    
+
     return evaluator;
   });
 }
@@ -63,14 +63,6 @@ function burnStakeForCurrentUser(currentUserRep) {
   return math.multiply(currentUserRep, toMultiply);
 }
 
-function cleanupEvaluators(evaluators) {
-  return _.map(evaluators, function(evaluator) {
-    evaluator.reputation = round(evaluator.reputation)
-    evaluator = _.omit(evaluator, 'value');
-    return evaluator;
-  });
-}
-
 function getSameEvaluatorsAddValue(newRep, factor, evaluatorRep, voteRep) {
   return math.chain(newRep)
                 .multiply(STAKE)
@@ -80,9 +72,9 @@ function getSameEvaluatorsAddValue(newRep, factor, evaluatorRep, voteRep) {
                 .done();
 }
 
-function updateSameEvaluatorsRep(evaluators, newRep, cahedRep, voteRep, currentEvaluationValue, currentUserId) {
+function updateSameEvaluatorsRep(evaluators, newRep, cachedRep, voteRep, currentEvaluationValue, currentUserId) {
   var toAdd;
-  var factor = math.pow(math.divide(voteRep, cahedRep), ALPHA);
+  var factor = math.pow(math.divide(voteRep, cachedRep), ALPHA);
   return _.map(evaluators, function(evaluator) {
 
     if ( evaluator.id === currentUserId ) {
@@ -100,8 +92,8 @@ function updateSameEvaluatorsRep(evaluators, newRep, cahedRep, voteRep, currentE
   });
 }
 
-function updateEvaluatorsRep(evaluators, currentUserRep, cahedRep) {
-  var factor = math.pow(math.divide(currentUserRep, cahedRep), BETA);
+function updateEvaluatorsRep(evaluators, currentUserRep, cachedRep) {
+  var factor = math.pow(math.divide(currentUserRep, cachedRep), BETA);
   var toDivide = math.chain(1)
                         .subtract(math.multiply(STAKE, factor))
                         .done();
