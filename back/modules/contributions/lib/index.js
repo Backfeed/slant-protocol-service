@@ -13,6 +13,7 @@ var async      = require('async');
 var util       = require('../../util');
 var db         = require('../../util/db');
 var biddingLib = require('../../biddings/lib');
+var usersLib = require('../../users/lib');
 
 function createContribution(event, cb) {
 
@@ -28,12 +29,23 @@ function createContribution(event, cb) {
     Item: newContribution
   };
 
+  //TODO contribution fee (param = 1) if not enough token throw error and prevent creation
+  var contributionFee = 1;
+
   async.waterfall([
     function(waterfallCB) {
       biddingLib.getBidding({ id: event.biddingId }, waterfallCB);
     },
     function(bidding, waterfallCB) {
-      if (bidding.status === 'Completed') return cb(new Error('400. bad request. bidding is complete, no more contriutions please!'));
+      if (bidding.status === 'Completed') return cb(new Error('400. bad request. bidding is complete, no more contributions please!'));
+      usersLib.getUser({ id: event.userId }, waterfallCB);
+    },
+    function(user, waterfallCB) {
+      if (user.tokens < contributionFee) return cb(new Error('400. bad request. not enough tokens for the contribution fee'));
+      user.tokens -= contributionFee;
+      usersLib.updateUser(user, waterfallCB);
+    },
+    function() {
       return db.put(params, cb, newContribution);
     }
   ]);
