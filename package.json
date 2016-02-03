@@ -7,6 +7,7 @@
     "localtest": "mocha spec",
     "sanity": "mocha **/basicApi.spec.js",
     "endBidding": "mocha spec/endBidding.spec.js",
+    "protocol": "mocha spec/ut.protocol.spec.js -w",
     "start": "npm run localtest"
   },
   "repository": {

@@ -55,7 +55,7 @@ describe.only("Test protocol according to excel", function() {
       })
       .then(function(res) {
         p1 = res.body;
-        expect(p1.tokens).to.be.equal(11);// TODO :: change for real value after reponse from protocol guys
+        expect(p1.tokens).to.be.equal(10);
         return chakram.wait();
       });
   });

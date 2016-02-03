@@ -41,29 +41,29 @@ var _ = require('underscore');
 var chakram = require('chakram');
 var math = require('mathjs');
 
-//var URL = 'http://localhost:1465';
-var URL = 'https://api.backfeed.cc/dev';
+var URL = 'http://localhost:1465';
+//var URL = 'https://api.backfeed.cc/slant';
 
 var params =  {
   headers: { 'x-api-key': process.env.X_API_KEY }
 };
 
-function createUser() { return chakram.post(URL + '/users/', {}, params) };
-function getUser(id) { return chakram.get(URL + '/users/' + id, params) };
-function deleteUser(id) { return chakram.delete(URL + '/users/' + id, {}, params) };
+function createUser() { return chakram.post(URL + '/users/', {}, params) }
+function getUser(id) { return chakram.get(URL + '/users/' + id, params) }
+function deleteUser(id) { return chakram.delete(URL + '/users/' + id, {}, params) }
 
-function createBidding() { return chakram.post(URL + '/biddings/', {}, params) };
-function getBidding(id) { return chakram.get(URL + '/biddings/' + id, params) };
-function deleteBidding(id) { return chakram.delete(URL + '/biddings/' + id, {}, params) };
-function endBidding(id) { return chakram.put(URL + '/biddings/' + id, {}, params) };
+function createBidding() { return chakram.post(URL + '/biddings/', {}, params) }
+function getBidding(id) { return chakram.get(URL + '/biddings/' + id, params) }
+function deleteBidding(id) { return chakram.delete(URL + '/biddings/' + id, {}, params) }
+function endBidding(id) { return chakram.put(URL + '/biddings/' + id, {}, params) }
 
-function createContribution(body) { return chakram.post(URL + '/contributions/', body, params) };
-function getContribution(id) { return chakram.get(URL + '/contributions/' + id, params) };
-function deleteContribution(id) { return chakram.delete(URL + '/contributions/' + id, {}, params) };
+function createContribution(body) { return chakram.post(URL + '/contributions/', body, params) }
+function getContribution(id) { return chakram.get(URL + '/contributions/' + id, params) }
+function deleteContribution(id) { return chakram.delete(URL + '/contributions/' + id, {}, params) }
 
-function createEvaluations(body) { return chakram.post(URL + '/evaluations/submit', body, params) };
-function getEvaluation(id) { return chakram.get(URL + '/evaluations/' + id , params) };
-function deleteEvaluation(id) { return chakram.delete(URL + '/evaluations/' + id, {}, params) };
+function createEvaluations(body) { return chakram.post(URL + '/evaluations/submit', body, params) }
+function getEvaluation(id) { return chakram.get(URL + '/evaluations/' + id , params) }
+function deleteEvaluation(id) { return chakram.delete(URL + '/evaluations/' + id, {}, params) }
 
 function getCachedRep() { return chakram.get(URL + '/util/getcachedrep/', {}, params) }
 
