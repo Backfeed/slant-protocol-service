@@ -33,6 +33,8 @@ module.exports = {
   toBodies: toBodies,
   pp: parseProtocol,
 
+  delayedGetCachedRep: delayedGetCachedRep,
+
   math: math
 
 };
@@ -40,9 +42,11 @@ module.exports = {
 var _ = require('underscore');
 var chakram = require('chakram');
 var math = require('mathjs');
+var Promise = require('promise');
 
-var URL = 'http://localhost:1465';
-//var URL = 'https://api.backfeed.cc/slant';
+
+// var URL = 'http://localhost:1465';
+var URL = 'https://api.backfeed.cc/slant';
 
 var params =  {
   headers: { 'x-api-key': process.env.X_API_KEY }
@@ -90,4 +94,19 @@ function toBody(x) {
 
 function parseProtocol(n) {
   return math.round(n, math.eval(process.env.ROUND_TO));
+}
+
+function promisedTimeout() {
+  return new Promise(function (resolve, reject) {
+    setTimeout(function() {
+      resolve();
+    }, 1000);
+  });
+}
+
+// after a change in users table, give time for the event to trigger syncCachedRep function and process the new cahedRep value
+function delayedGetCachedRep() {
+  return promisedTimeout().then(function() {
+    return getCachedRep();
+  });
 }

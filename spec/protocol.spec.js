@@ -2,6 +2,7 @@ var ServerlessHelpers = require('serverless-helpers-js').loadEnv();
 var _ = require('underscore');
 var chakram = require('chakram');
 expect = chakram.expect;
+
 //var expect = require('chai').expect;
 //var assert = require('chai').assert;
 
@@ -72,7 +73,7 @@ describe.only("Test protocol according to excel", function() {
       .then(function(res) {
         p1 = res.body;
         expect(p1.reputation).to.be.closeTo(0.196437, 0.000005);
-        return util.getCachedRep()
+        return util.delayedGetCachedRep();
       }).then(function(res) {
         expect(res.body.theValue).to.be.closeTo(0.996437, 0.000005);
         return chakram.wait();
@@ -87,16 +88,17 @@ describe.only("Test protocol according to excel", function() {
     }).then(function(res) {
       arr = [
         util.user.get(p1.id),
-        util.user.get(p2.id),
-        util.getCachedRep()
+        util.user.get(p2.id)
       ];
       return chakram.all(arr);
     }).then(function(res) {
       p1 = res[0].body;
       p2 = res[1].body;
-      cachedRep = res[2].body.theValue;
       expect(p1.reputation).to.be.closeTo(0.198428, 0.000005);
       expect(p2.reputation).to.be.closeTo(0.196452, 0.000005);
+      return util.delayedGetCachedRep();
+    }).then(function(res) {
+      cachedRep = res.body.theValue;
       expect(cachedRep).to.be.closeTo(0.994880, 0.000005);
     });
   });
@@ -109,16 +111,17 @@ describe.only("Test protocol according to excel", function() {
     }).then(function(res) {
       arr = [
         util.user.get(p1.id),
-        util.user.get(p2.id),
-        util.getCachedRep()
+        util.user.get(p2.id)
       ];
       return chakram.all(arr);
     }).then(function(res) {
       p1 = res[0].body;
       p2 = res[1].body;
-      cachedRep = res[2].body.theValue;
       expect(p1.reputation).to.be.closeTo(0.194881, 0.000005);
       expect(p2.reputation).to.be.closeTo(0.196452, 0.000005);
+      return util.delayedGetCachedRep();
+    }).then(function(res) {
+      cachedRep = res.body.theValue;
       expect(cachedRep).to.be.closeTo(0.991333, 0.000005);
     });
   });
@@ -132,18 +135,19 @@ describe.only("Test protocol according to excel", function() {
       arr = [
         util.user.get(p1.id),
         util.user.get(p2.id),
-        util.user.get(p3.id),
-        util.getCachedRep()
+        util.user.get(p3.id)
       ];
       return chakram.all(arr);
     }).then(function(res) {
       p1 = res[0].body;
       p2 = res[1].body;
       p3 = res[2].body;
-      cachedRep = res[3].body.theValue;
       expect(p1.reputation).to.be.closeTo(0.200013, 0.000005);
       expect(p2.reputation).to.be.closeTo(0.198454, 0.000005);
       expect(p3.reputation).to.be.closeTo(0.195165, 0.000005);
+      return util.delayedGetCachedRep();
+    }).then(function(res) {
+      cachedRep = res.body.theValue;
       expect(cachedRep).to.be.closeTo(0.993632, 0.000005);
     });
   });
@@ -158,8 +162,7 @@ describe.only("Test protocol according to excel", function() {
         util.user.get(p1.id),
         util.user.get(p2.id),
         util.user.get(p3.id),
-        util.user.get(p4.id),
-        util.getCachedRep()
+        util.user.get(p4.id)
       ];
       return chakram.all(arr);
     }).then(function(res) {
@@ -167,11 +170,13 @@ describe.only("Test protocol according to excel", function() {
       p2 = res[1].body;
       p3 = res[2].body;
       p4 = res[3].body;
-      cachedRep = res[4].body.theValue;
       expect(p1.reputation).to.be.closeTo(0.204674, 0.000005);
       expect(p2.reputation).to.be.closeTo(0.200472, 0.000005);
       expect(p3.reputation).to.be.closeTo(0.199713, 0.000005);
       expect(p4.reputation).to.be.closeTo(0.194559, 0.000005);
+      return util.delayedGetCachedRep();
+    }).then(function(res) {
+      cachedRep = res.body.theValue;
       expect(cachedRep).to.be.closeTo(0.999418, 0.000005);
     });
   });
@@ -187,8 +192,7 @@ describe.only("Test protocol according to excel", function() {
         util.user.get(p2.id),
         util.user.get(p3.id),
         util.user.get(p4.id),
-        util.user.get(p5.id),
-        util.getCachedRep()
+        util.user.get(p5.id)
       ];
       return chakram.all(arr);
     }).then(function(res) {
@@ -197,12 +201,14 @@ describe.only("Test protocol according to excel", function() {
       p3 = res[2].body;
       p4 = res[3].body;
       p5 = res[4].body;
-      cachedRep = res[5].body.theValue;
       expect(p1.reputation).to.be.closeTo(0.206743, 0.000005);
       expect(p2.reputation).to.be.closeTo(0.205699, 0.000005);
       expect(p3.reputation).to.be.closeTo(0.201731, 0.000005);
       expect(p4.reputation).to.be.closeTo(0.196525, 0.000005);
       expect(p5.reputation).to.be.closeTo(0.195114, 0.000005);
+      return util.delayedGetCachedRep();
+    }).then(function(res) {
+      cachedRep = res.body.theValue;
       expect(cachedRep).to.be.closeTo(1.005812, 0.000005);
     });
   });
@@ -218,8 +224,7 @@ describe.only("Test protocol according to excel", function() {
         util.user.get(p2.id),
         util.user.get(p3.id),
         util.user.get(p4.id),
-        util.user.get(p5.id),
-        util.getCachedRep()
+        util.user.get(p5.id)
       ];
       return chakram.all(arr);
     }).then(function(res) {
@@ -228,12 +233,14 @@ describe.only("Test protocol according to excel", function() {
       p3 = res[2].body;
       p4 = res[3].body;
       p5 = res[4].body;
-      cachedRep = res[5].body.theValue;
       expect(p1.reputation).to.be.closeTo(0.212004, 0.000005);
       expect(p2.reputation).to.be.closeTo(0.205699, 0.000005);
       expect(p3.reputation).to.be.closeTo(0.201731, 0.000005);
       expect(p4.reputation).to.be.closeTo(0.191603, 0.000005);
       expect(p5.reputation).to.be.closeTo(0.195114, 0.000005);
+      return util.delayedGetCachedRep();
+    }).then(function(res) {
+      cachedRep = res.body.theValue;
       expect(cachedRep).to.be.closeTo(1.006151, 0.000005);
     });
   });
@@ -249,8 +256,7 @@ describe.only("Test protocol according to excel", function() {
         util.user.get(p2.id),
         util.user.get(p3.id),
         util.user.get(p4.id),
-        util.user.get(p5.id),
-        util.getCachedRep()
+        util.user.get(p5.id)
       ];
       return chakram.all(arr);
     }).then(function(res) {
@@ -259,12 +265,14 @@ describe.only("Test protocol according to excel", function() {
       p3 = res[2].body;
       p4 = res[3].body;
       p5 = res[4].body;
-      cachedRep = res[5].body.theValue;
       expect(p1.reputation).to.be.closeTo(0.208466, 0.000005);
       expect(p2.reputation).to.be.closeTo(0.205699, 0.000005);
       expect(p3.reputation).to.be.closeTo(0.201731, 0.000005);
       expect(p4.reputation).to.be.closeTo(0.193643, 0.000005);
       expect(p5.reputation).to.be.closeTo(0.195114, 0.000005);
+      return util.delayedGetCachedRep();
+    }).then(function(res) {
+      cachedRep = res.body.theValue;
       expect(cachedRep).to.be.closeTo(1.004653, 0.000005);
     });
   });
@@ -280,8 +288,7 @@ describe.only("Test protocol according to excel", function() {
         util.user.get(p2.id),
         util.user.get(p3.id),
         util.user.get(p4.id),
-        util.user.get(p5.id),
-        util.getCachedRep()
+        util.user.get(p5.id)
       ];
       return chakram.all(arr);
     }).then(function(res) {
@@ -290,12 +297,15 @@ describe.only("Test protocol according to excel", function() {
       p3 = res[2].body;
       p4 = res[3].body;
       p5 = res[4].body;
-      cachedRep = res[5].body.theValue;
       expect(p1.reputation).to.be.closeTo(0.213980, 0.000005);
       expect(p2.reputation).to.be.closeTo(0.200749, 0.000005);
       expect(p3.reputation).to.be.closeTo(0.201731, 0.000005);
       expect(p4.reputation).to.be.closeTo(0.195646, 0.000005);
       expect(p5.reputation).to.be.closeTo(0.195114, 0.000005);
+      return util.delayedGetCachedRep();
+    }).then(function(res) {
+      cachedRep = res.body.theValue;
+      expect(cachedRep).to.be.closeTo(1.00722, 0.000005);
     });
   });
 
@@ -310,8 +320,7 @@ describe.only("Test protocol according to excel", function() {
         util.user.get(p2.id),
         util.user.get(p3.id),
         util.user.get(p4.id),
-        util.user.get(p5.id),
-        util.getCachedRep()
+        util.user.get(p5.id)
       ];
       return chakram.all(arr);
     }).then(function(res) {
@@ -320,12 +329,15 @@ describe.only("Test protocol according to excel", function() {
       p3 = res[2].body;
       p4 = res[3].body;
       p5 = res[4].body;
-      cachedRep = res[5].body.theValue;
       expect(p1.reputation).to.be.closeTo(0.216145, 0.000005);
       expect(p2.reputation).to.be.closeTo(0.202780, 0.000005);
       expect(p3.reputation).to.be.closeTo(0.196832, 0.000005);
       expect(p4.reputation).to.be.closeTo(0.200776, 0.000005);
       expect(p5.reputation).to.be.closeTo(0.195114, 0.000005);
+      return util.delayedGetCachedRep();
+    }).then(function(res) {
+      cachedRep = res.body.theValue;
+      expect(cachedRep).to.be.closeTo(1.011647, 0.000005);
     });
   });
 
