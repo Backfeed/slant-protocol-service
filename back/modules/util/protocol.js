@@ -6,10 +6,16 @@ var STAKE = 0.05;
 var ALPHA = 0.5;
 var BETA = 1;
 var ROUND_TO = 6;
+var TOKEN_REWARD_FACTOR = 15;
+var REP_REWARD_FACTOR = 5;
 
 module.exports = {
   evaluate: evaluate,
-  calcReward: calcReward
+  calcReward: calcReward,
+  burnStakeForCurrentUser: burnStakeForCurrentUser,
+  getSameEvaluatorsAddValue: getSameEvaluatorsAddValue,
+  updateSameEvaluatorsRep: updateSameEvaluatorsRep,
+  updateEvaluatorsRep: updateEvaluatorsRep
 };
 
 function evaluate(uid, value, evaluators, evaluations, cachedRep) {
@@ -78,15 +84,14 @@ function updateSameEvaluatorsRep(evaluators, newRep, cachedRep, voteRep, current
   return _.map(evaluators, function(evaluator) {
 
     if ( evaluator.id === currentUserId ) {
-      toAdd = getSameEvaluatorsAddValue(newRep, factor, newRep, voteRep)
+      toAdd = getSameEvaluatorsAddValue(newRep, factor, newRep, voteRep);
       evaluator.reputation = math.add(burnStakeForCurrentUser(newRep), toAdd);
     }
 
     else if ( evaluator.value === currentEvaluationValue ) {
-      toAdd = getSameEvaluatorsAddValue(newRep, factor, evaluator.reputation, voteRep)
+      toAdd = getSameEvaluatorsAddValue(newRep, factor, evaluator.reputation, voteRep);
       evaluator.reputation = math.add(evaluator.reputation, toAdd);
     }
-
 
     return evaluator;
   });
@@ -119,7 +124,7 @@ function round(n) {
 
 function calcReward(winningContributionScore, cachedRep) {
   return {
-    reputation: 10 * winningContributionScore / cachedRep,
-    tokens: 10 * winningContributionScore / cachedRep
+    reputation: REP_REWARD_FACTOR * winningContributionScore / cachedRep,
+    tokens: TOKEN_REWARD_FACTOR * winningContributionScore / cachedRep
   }
 }
